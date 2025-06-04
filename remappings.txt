@@ -1,0 +1,7 @@
+forge-std/=lib/forge-std/src/
+@zodiac/=lib/zodiac/
+@safe-smart-account/=lib/safe-smart-account
+@circles/=lib/circles-contracts-v2
+@solady/=lib/solady/
+@gnosis.pm/safe-contracts/=lib/safe-smart-account/
+@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/
