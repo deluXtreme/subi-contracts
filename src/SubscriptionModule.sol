@@ -62,7 +62,13 @@ contract SubscriptionModule is RevokedNonce {
 
     error InvalidRecipient();
 
+    error InvalidSubscriber();
+
     error NotRedeemable();
+
+    error NotSafe();
+
+    error SingleStreamOnly();
 
     /*//////////////////////////////////////////////////////////////
                    USER-FACING NON-CONSTANT FUNCTIONS
@@ -108,6 +114,8 @@ contract SubscriptionModule is RevokedNonce {
         Subscription memory sub = subscriptions[safe][id];
 
         require(sub.lastRedeemed + sub.frequency <= block.timestamp, NotRedeemable());
+        require(streams.length == 1, SingleStreamOnly());
+        require(flowVertices[streams[0].sourceCoordinate] == sub.subscriber, InvalidSubscriber());
         require(packedCoordinates.extractRecipient(flowVertices) == sub.recipient, InvalidRecipient());
         require(flow.extractAmount() == sub.amount, InvalidAmount());
 
