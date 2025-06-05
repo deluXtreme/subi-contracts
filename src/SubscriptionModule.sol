@@ -75,8 +75,6 @@ contract SubscriptionModule {
 
     error NotRedeemable();
 
-    error NotSafe();
-
     error SingleStreamOnly();
 
     error SubscriptionCancelled();
