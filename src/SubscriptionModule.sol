@@ -21,9 +21,9 @@ contract SubscriptionModule is RevokedNonce {
 
     using EnumerableSetLib for EnumerableSetLib.Bytes32Set;
 
-    using CirclesLib for bytes;
-
     using CirclesLib for TypeDefinitions.FlowEdge[];
+
+    using CirclesLib for TypeDefinitions.Stream;
 
     /*//////////////////////////////////////////////////////////////
                             STATE VARIABLES
@@ -112,11 +112,12 @@ contract SubscriptionModule is RevokedNonce {
     {
         address safe = safeFromId[id];
         Subscription memory sub = subscriptions[safe][id];
+        TypeDefinitions.Stream memory stream = streams[0];
 
         require(sub.lastRedeemed + sub.frequency <= block.timestamp, NotRedeemable());
         require(streams.length == 1, SingleStreamOnly());
-        require(flowVertices[streams[0].sourceCoordinate] == sub.subscriber, InvalidSubscriber());
-        require(packedCoordinates.extractRecipient(flowVertices) == sub.recipient, InvalidRecipient());
+        require(flowVertices[stream.sourceCoordinate] == sub.subscriber, InvalidSubscriber());
+        require(stream.checkRecipients(sub.recipient, flowVertices, packedCoordinates), InvalidRecipient());
         require(flow.extractAmount() == sub.amount, InvalidAmount());
 
         sub.lastRedeemed = block.timestamp;

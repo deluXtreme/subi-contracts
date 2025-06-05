@@ -20,20 +20,30 @@ library CirclesLib {
         }
     }
 
-    /// @notice Take the last two bytes of `coordinates` and use them as an index into `flowVertices`.
-    /// @param coordinates A bytes array whose final two bytes encode an index.
-    /// @param flowVertices A list of addresses. We return flowVertices[index].
-    /// @return The address from flowVertices at the index encoded in the last two bytes.
-    function extractRecipient(
-        bytes calldata coordinates,
-        address[] calldata flowVertices
+    /// @notice Verify that every flow edge in the given stream routes to the specified recipient.
+    /// @param stream A Stream struct whose flow edge ids define how many edges to check.
+    /// @param recipient The address that each to index must match.
+    /// @param flowVertices The list of all addresses (vertices) used to resolve each to index.
+    /// @param coordinates Packed coordinates for this stream.
+    /// @return success True if every extracted to address equals `recipient`, otherwise false.
+    function checkRecipients(
+        TypeDefinitions.Stream memory stream,
+        address recipient,
+        address[] calldata flowVertices,
+        bytes calldata coordinates
     )
         internal
         pure
-        returns (address)
+        returns (bool)
     {
-        uint256 l = coordinates.length;
-        return flowVertices[slice(coordinates, l - 2, l)];
+        uint256 edgeCount = stream.flowEdgeIds.length;
+        for (uint256 i = 0; i < edgeCount; i++) {
+            uint256 start = 6 * stream.flowEdgeIds[i] + 4;
+            uint256 toIndex = slice(coordinates, start, start + 2);
+            if (flowVertices[toIndex] != recipient) return false;
+        }
+
+        return true;
     }
 
     /// @notice Sum all flow amount entries where stream sink ID is 1.
