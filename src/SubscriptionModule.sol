@@ -2,8 +2,16 @@
 pragma solidity ^0.8.28;
 
 import { RevokedNonce } from "src/RevokedNonce.sol";
+import { Subscription } from "src/libs/Types.sol";
+import { SubscriptionLib } from "src/libs/SubscriptionLib.sol";
 
 contract SubscriptionModule is RevokedNonce {
+    /*//////////////////////////////////////////////////////////////
+                               LIBRARIES
+    //////////////////////////////////////////////////////////////*/
+
+    using SubscriptionLib for Subscription;
+
     /*//////////////////////////////////////////////////////////////
                             STATE VARIABLES
     //////////////////////////////////////////////////////////////*/
