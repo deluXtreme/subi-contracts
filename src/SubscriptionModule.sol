@@ -59,8 +59,6 @@ contract SubscriptionModule {
                                  ERRORS
     //////////////////////////////////////////////////////////////*/
 
-    error Cancelled();
-
     error ExecutionFailed();
 
     error InvalidAmount();
@@ -80,6 +78,8 @@ contract SubscriptionModule {
     error NotSafe();
 
     error SingleStreamOnly();
+
+    error SubscriptionCancelled();
 
     /*//////////////////////////////////////////////////////////////
                    USER-FACING NON-CONSTANT FUNCTIONS
@@ -123,11 +123,9 @@ contract SubscriptionModule {
     {
         address safe = safeFromId[id];
         Subscription memory sub = subscriptions[safe][id];
-        TypeDefinitions.Stream memory stream = streams[0];
-
-        require(isNonceUsable(safe, _nonceSpace[safe], sub.nonce), Cancelled());
-
+        require(isNonceUsable(safe, _nonceSpace[safe], sub.nonce), SubscriptionCancelled());
         require(sub.lastRedeemed + sub.frequency <= block.timestamp, NotRedeemable());
+        TypeDefinitions.Stream memory stream = streams[0];
         require(streams.length == 1, SingleStreamOnly());
         require(flowVertices[stream.sourceCoordinate] == sub.subscriber, InvalidSubscriber());
         require(stream.checkRecipients(sub.recipient, flowVertices, packedCoordinates), InvalidRecipient());
