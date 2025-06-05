@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import { RevokedNonce } from "src/RevokedNonce.sol";
 import { ISafe } from "src/interfaces/ISafe.sol";
 import { CirclesLib } from "src/libs/CirclesLib.sol";
 import { Subscription } from "src/libs/Types.sol";
@@ -12,7 +11,7 @@ import { TypeDefinitions } from "@circles/src/hub/TypeDefinitions.sol";
 import { Enum } from "@safe-smart-account/contracts/common/Enum.sol";
 import { EnumerableSetLib } from "@solady/src/utils/EnumerableSetLib.sol";
 
-contract SubscriptionModule is RevokedNonce {
+contract SubscriptionModule {
     /*//////////////////////////////////////////////////////////////
                                LIBRARIES
     //////////////////////////////////////////////////////////////*/
@@ -40,6 +39,10 @@ contract SubscriptionModule is RevokedNonce {
 
     mapping(address safe => EnumerableSetLib.Bytes32Set) internal ids;
 
+    mapping(address safe => mapping(uint256 space => mapping(uint256 nonce => bool isRevoked))) internal _revokedNonce;
+
+    mapping(address safe => uint256 space) internal _nonceSpace;
+
     /*//////////////////////////////////////////////////////////////
                                  EVENTS
     //////////////////////////////////////////////////////////////*/
@@ -48,9 +51,15 @@ contract SubscriptionModule is RevokedNonce {
 
     event Redeemed(bytes32 indexed id, Subscription indexed subscription);
 
+    event NonceRevoked(address indexed owner, uint256 indexed space, uint256 indexed nonce);
+
+    event NonceSpaceRevoked(address indexed owner, uint256 indexed space);
+
     /*//////////////////////////////////////////////////////////////
                                  ERRORS
     //////////////////////////////////////////////////////////////*/
+
+    error Cancelled();
 
     error ExecutionFailed();
 
@@ -63,6 +72,8 @@ contract SubscriptionModule is RevokedNonce {
     error InvalidRecipient();
 
     error InvalidSubscriber();
+
+    error NonceAlreadyRevoked(address addr, uint256 space, uint256 nonce);
 
     error NotRedeemable();
 
@@ -114,6 +125,8 @@ contract SubscriptionModule is RevokedNonce {
         Subscription memory sub = subscriptions[safe][id];
         TypeDefinitions.Stream memory stream = streams[0];
 
+        require(isNonceUsable(safe, _nonceSpace[safe], sub.nonce), Cancelled());
+
         require(sub.lastRedeemed + sub.frequency <= block.timestamp, NotRedeemable());
         require(streams.length == 1, SingleStreamOnly());
         require(flowVertices[stream.sourceCoordinate] == sub.subscriber, InvalidSubscriber());
@@ -137,11 +150,46 @@ contract SubscriptionModule is RevokedNonce {
         emit Redeemed(id, subscriptions[safe][id]);
     }
 
+    function cancelAll() external returns (uint256) {
+        emit NonceSpaceRevoked(msg.sender, _nonceSpace[msg.sender]);
+        return ++_nonceSpace[msg.sender];
+    }
+
+    function cancel(bytes32 id) external {
+        _revokeNonce(msg.sender, _nonceSpace[msg.sender], subscriptions[msg.sender][id].nonce);
+    }
+
+    function cancelMultiple(bytes32[] calldata _ids) external {
+        for (uint256 i; i < _ids.length; ++i) {
+            _revokeNonce(msg.sender, _nonceSpace[msg.sender], subscriptions[msg.sender][_ids[i]].nonce);
+        }
+    }
+
     /*//////////////////////////////////////////////////////////////
                      USER-FACING CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
     function getSubscriptionIds(address safe) external view returns (bytes32[] memory) {
         return ids[safe].values();
+    }
+
+    function currentNonceSpace(address owner) external view returns (uint256) {
+        return _nonceSpace[owner];
+    }
+
+    function isNonceUsable(address owner, uint256 nonceSpace, uint256 nonce) public view returns (bool) {
+        if (_nonceSpace[owner] != nonceSpace) return false;
+
+        return !_revokedNonce[owner][nonceSpace][nonce];
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                    INTERNAL NON-CONSTANT FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+
+    function _revokeNonce(address safe, uint256 sapce, uint256 nonce) private {
+        if (_revokedNonce[safe][sapce][nonce]) revert NonceAlreadyRevoked({ addr: safe, space: sapce, nonce: nonce });
+        _revokedNonce[safe][sapce][nonce] = true;
+        emit NonceRevoked(safe, sapce, nonce);
     }
 }
