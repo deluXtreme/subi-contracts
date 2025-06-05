@@ -2,9 +2,14 @@
 pragma solidity ^0.8.28;
 
 import { RevokedNonce } from "src/RevokedNonce.sol";
+import { ISafe } from "src/interfaces/ISafe.sol";
+import { CirclesLib } from "src/libs/CirclesLib.sol";
 import { Subscription } from "src/libs/Types.sol";
 import { SubscriptionLib } from "src/libs/SubscriptionLib.sol";
 
+import { IHubV2 } from "@circles/src/hub/IHub.sol";
+import { TypeDefinitions } from "@circles/src/hub/TypeDefinitions.sol";
+import { Enum } from "@safe-smart-account/contracts/common/Enum.sol";
 import { EnumerableSetLib } from "@solady/src/utils/EnumerableSetLib.sol";
 
 contract SubscriptionModule is RevokedNonce {
@@ -16,12 +21,20 @@ contract SubscriptionModule is RevokedNonce {
 
     using EnumerableSetLib for EnumerableSetLib.Bytes32Set;
 
+    using CirclesLib for bytes;
+
+    using CirclesLib for TypeDefinitions.FlowEdge[];
+
     /*//////////////////////////////////////////////////////////////
                             STATE VARIABLES
     //////////////////////////////////////////////////////////////*/
 
     string public constant NAME = "Subscription Module";
     string public constant VERSION = "0.0.1";
+
+    address public constant HUB = 0xc12C1E50ABB450d6205Ea2C3Fa861b3B834d13e8;
+
+    mapping(bytes32 id => address safe) public safeFromId;
 
     mapping(address safe => mapping(bytes32 id => Subscription subscription)) public subscriptions;
 
@@ -33,13 +46,23 @@ contract SubscriptionModule is RevokedNonce {
 
     event SubscriptionCreated(bytes32 indexed id, Subscription indexed subscription);
 
+    event Redeemed(bytes32 indexed id, Subscription indexed subscription);
+
     /*//////////////////////////////////////////////////////////////
                                  ERRORS
     //////////////////////////////////////////////////////////////*/
 
+    error ExecutionFailed();
+
+    error InvalidAmount();
+
     error IdentifierExists();
 
     error InvalidFrequency();
+
+    error InvalidRecipient();
+
+    error NotRedeemable();
 
     /*//////////////////////////////////////////////////////////////
                    USER-FACING NON-CONSTANT FUNCTIONS
@@ -54,7 +77,7 @@ contract SubscriptionModule is RevokedNonce {
         external
         returns (bytes32 id)
     {
-        Subscription memory subscription = Subscription({
+        Subscription memory sub = Subscription({
             subscriber: msg.sender,
             recipient: recipient,
             amount: amount,
@@ -63,13 +86,46 @@ contract SubscriptionModule is RevokedNonce {
             nonce: nonce
         });
 
-        id = subscription.compute();
+        id = sub.compute();
         require(!ids[msg.sender].contains(id), IdentifierExists());
         require(frequency > 0, InvalidFrequency());
 
-        subscriptions[msg.sender][id] = subscription;
+        subscriptions[msg.sender][id] = sub;
         ids[msg.sender].add(id);
-        emit SubscriptionCreated(id, subscription);
+        emit SubscriptionCreated(id, sub);
+    }
+
+    function redeem(
+        bytes32 id,
+        address[] calldata flowVertices,
+        TypeDefinitions.FlowEdge[] calldata flow,
+        TypeDefinitions.Stream[] calldata streams,
+        bytes calldata packedCoordinates
+    )
+        external
+    {
+        address safe = safeFromId[id];
+        Subscription memory sub = subscriptions[safe][id];
+
+        require(sub.lastRedeemed + sub.frequency <= block.timestamp, NotRedeemable());
+        require(packedCoordinates.extractRecipient(flowVertices) == sub.recipient, InvalidRecipient());
+        require(flow.extractAmount() == sub.amount, InvalidAmount());
+
+        sub.lastRedeemed = block.timestamp;
+
+        subscriptions[safe][id] = sub;
+
+        require(
+            ISafe(safe).execTransactionFromModule(
+                HUB,
+                0,
+                abi.encodeCall(IHubV2.operateFlowMatrix, (flowVertices, flow, streams, packedCoordinates)),
+                Enum.Operation.Call
+            ),
+            ExecutionFailed()
+        );
+
+        emit Redeemed(id, subscriptions[safe][id]);
     }
 
     /*//////////////////////////////////////////////////////////////
