@@ -12,9 +12,9 @@ contract RevokedNonce {
                             STATE VARIABLES
     //////////////////////////////////////////////////////////////*/
 
-    mapping(address safe => mapping(uint256 space => mapping(uint256 nonce => bool isRevoked))) internal _revokedNonce;
+    mapping(address owner => mapping(uint256 space => mapping(uint256 nonce => bool isRevoked))) internal _revokedNonce;
 
-    mapping(address safe => uint256 nonce) internal _nonceSpace;
+    mapping(address owner => uint256 space) internal _nonceSpace;
 
     /*//////////////////////////////////////////////////////////////
                                  EVENTS
