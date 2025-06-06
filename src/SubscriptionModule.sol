@@ -3,6 +3,7 @@ pragma solidity ^0.8.28;
 
 import { ISafe } from "src/interfaces/ISafe.sol";
 import { CirclesLib } from "src/libs/CirclesLib.sol";
+import { Errors } from "src/libs/Errors.sol";
 import { Subscription } from "src/libs/Types.sol";
 import { SubscriptionLib } from "src/libs/SubscriptionLib.sol";
 
@@ -56,30 +57,6 @@ contract SubscriptionModule {
     event NonceSpaceRevoked(address indexed owner, uint256 indexed space);
 
     /*//////////////////////////////////////////////////////////////
-                                 ERRORS
-    //////////////////////////////////////////////////////////////*/
-
-    error ExecutionFailed();
-
-    error InvalidAmount();
-
-    error IdentifierExists();
-
-    error InvalidFrequency();
-
-    error InvalidRecipient();
-
-    error InvalidSubscriber();
-
-    error NonceAlreadyRevoked(address addr, uint256 space, uint256 nonce);
-
-    error NotRedeemable();
-
-    error SingleStreamOnly();
-
-    error SubscriptionCancelled();
-
-    /*//////////////////////////////////////////////////////////////
                    USER-FACING NON-CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
@@ -102,8 +79,8 @@ contract SubscriptionModule {
         });
 
         id = sub.compute();
-        require(!ids[msg.sender].contains(id), IdentifierExists());
-        require(frequency > 0, InvalidFrequency());
+        require(!ids[msg.sender].contains(id), Errors.IdentifierExists());
+        require(frequency > 0, Errors.InvalidFrequency());
 
         subscriptions[msg.sender][id] = sub;
         ids[msg.sender].add(id);
@@ -121,13 +98,13 @@ contract SubscriptionModule {
     {
         address safe = safeFromId[id];
         Subscription memory sub = subscriptions[safe][id];
-        require(isNonceUsable(safe, _nonceSpace[safe], sub.nonce), SubscriptionCancelled());
-        require(sub.lastRedeemed + sub.frequency <= block.timestamp, NotRedeemable());
+        require(isNonceUsable(safe, _nonceSpace[safe], sub.nonce), Errors.SubscriptionCancelled());
+        require(sub.lastRedeemed + sub.frequency <= block.timestamp, Errors.NotRedeemable());
         TypeDefinitions.Stream memory stream = streams[0];
-        require(streams.length == 1, SingleStreamOnly());
-        require(flowVertices[stream.sourceCoordinate] == sub.subscriber, InvalidSubscriber());
-        require(stream.checkRecipients(sub.recipient, flowVertices, packedCoordinates), InvalidRecipient());
-        require(flow.extractAmount() == sub.amount, InvalidAmount());
+        require(streams.length == 1, Errors.SingleStreamOnly());
+        require(flowVertices[stream.sourceCoordinate] == sub.subscriber, Errors.InvalidSubscriber());
+        require(stream.checkRecipients(sub.recipient, flowVertices, packedCoordinates), Errors.InvalidRecipient());
+        require(flow.extractAmount() == sub.amount, Errors.InvalidAmount());
 
         sub.lastRedeemed = block.timestamp;
 
@@ -140,7 +117,7 @@ contract SubscriptionModule {
                 abi.encodeCall(IHubV2.operateFlowMatrix, (flowVertices, flow, streams, packedCoordinates)),
                 Enum.Operation.Call
             ),
-            ExecutionFailed()
+            Errors.ExecutionFailed()
         );
 
         emit Redeemed(id, subscriptions[safe][id]);
@@ -184,7 +161,9 @@ contract SubscriptionModule {
     //////////////////////////////////////////////////////////////*/
 
     function _revokeNonce(address safe, uint256 sapce, uint256 nonce) private {
-        if (_revokedNonce[safe][sapce][nonce]) revert NonceAlreadyRevoked({ addr: safe, space: sapce, nonce: nonce });
+        if (_revokedNonce[safe][sapce][nonce]) {
+            revert Errors.NonceAlreadyRevoked({ addr: safe, space: sapce, nonce: nonce });
+        }
         _revokedNonce[safe][sapce][nonce] = true;
         emit NonceRevoked(safe, sapce, nonce);
     }
