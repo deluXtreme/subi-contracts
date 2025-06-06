@@ -128,13 +128,13 @@ contract SubscriptionModule {
         return ++_nonceSpace[msg.sender];
     }
 
-    function cancel(bytes32 id) external {
+    function cancel(bytes32 id) public {
         _revokeNonce(msg.sender, _nonceSpace[msg.sender], subscriptions[msg.sender][id].nonce);
     }
 
     function cancelMultiple(bytes32[] calldata _ids) external {
         for (uint256 i; i < _ids.length; ++i) {
-            _revokeNonce(msg.sender, _nonceSpace[msg.sender], subscriptions[msg.sender][_ids[i]].nonce);
+            cancel(_ids[i]);
         }
     }
 
