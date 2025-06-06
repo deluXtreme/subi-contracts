@@ -158,6 +158,12 @@ contract SubscriptionModule {
         return !_revokedNonce[owner][nonceSpace][nonce];
     }
 
+    function isRedeemable(bytes32 id) public view returns (uint256) {
+        address safe = safeFromId[id];
+        Subscription memory subscription = subscriptions[safe][id];
+        return (block.timestamp - subscription.lastRedeemed) / subscription.frequency * subscription.amount;
+    }
+
     /*//////////////////////////////////////////////////////////////
                     INTERNAL NON-CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////*/
