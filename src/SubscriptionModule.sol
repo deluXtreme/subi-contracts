@@ -38,7 +38,7 @@ contract SubscriptionModule {
 
     mapping(address safe => mapping(bytes32 id => Subscription subscription)) public subscriptions;
 
-    mapping(address safe => EnumerableSetLib.Bytes32Set) internal ids;
+    mapping(address safe => mapping(uint256 space => EnumerableSetLib.Bytes32Set)) internal ids;
 
     mapping(address safe => mapping(uint256 space => mapping(uint256 nonce => bool isRevoked))) internal _revokedNonce;
 
@@ -77,14 +77,15 @@ contract SubscriptionModule {
             frequency: frequency,
             nonce: nonce
         });
+        uint256 space = _nonceSpace[msg.sender];
 
         id = sub.compute();
-        require(!ids[msg.sender].contains(id), Errors.IdentifierExists());
+        require(!ids[msg.sender][space].contains(id), Errors.IdentifierExists());
         require(frequency > 0, Errors.InvalidFrequency());
 
         subscriptions[msg.sender][id] = sub;
         safeFromId[id] = msg.sender;
-        ids[msg.sender].add(id);
+        ids[msg.sender][space].add(id);
         emit SubscriptionCreated(id, sub);
     }
 
@@ -132,7 +133,9 @@ contract SubscriptionModule {
     }
 
     function cancel(bytes32 id) public {
-        _revokeNonce(msg.sender, _nonceSpace[msg.sender], subscriptions[msg.sender][id].nonce);
+        uint256 space = _nonceSpace[msg.sender];
+        _revokeNonce(msg.sender, space, subscriptions[msg.sender][id].nonce);
+        ids[msg.sender][space].remove(id);
     }
 
     function cancelMultiple(bytes32[] calldata _ids) external {
@@ -146,7 +149,7 @@ contract SubscriptionModule {
     //////////////////////////////////////////////////////////////*/
 
     function getSubscriptionIds(address safe) external view returns (bytes32[] memory) {
-        return ids[safe].values();
+        return ids[safe][_nonceSpace[safe]].values();
     }
 
     function currentNonceSpace(address safe) external view returns (uint256) {
