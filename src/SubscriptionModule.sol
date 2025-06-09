@@ -83,6 +83,7 @@ contract SubscriptionModule {
         require(frequency > 0, Errors.InvalidFrequency());
 
         subscriptions[msg.sender][id] = sub;
+        safeFromId[id] = msg.sender;
         ids[msg.sender].add(id);
         emit SubscriptionCreated(id, sub);
     }
@@ -122,7 +123,7 @@ contract SubscriptionModule {
             Errors.ExecutionFailed()
         );
 
-        emit Redeemed(id, subscriptions[safe][id]);
+        emit Redeemed(id, sub);
     }
 
     function cancelAll() external returns (uint256) {
