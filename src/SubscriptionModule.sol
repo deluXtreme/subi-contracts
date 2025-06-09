@@ -52,9 +52,9 @@ contract SubscriptionModule {
 
     event Redeemed(bytes32 indexed id, Subscription indexed subscription);
 
-    event NonceRevoked(address indexed owner, uint256 indexed space, uint256 indexed nonce);
+    event NonceRevoked(address indexed safe, uint256 indexed space, uint256 indexed nonce);
 
-    event NonceSpaceRevoked(address indexed owner, uint256 indexed space);
+    event NonceSpaceRevoked(address indexed safe, uint256 indexed space);
 
     /*//////////////////////////////////////////////////////////////
                    USER-FACING NON-CONSTANT FUNCTIONS
@@ -149,14 +149,14 @@ contract SubscriptionModule {
         return ids[safe].values();
     }
 
-    function currentNonceSpace(address owner) external view returns (uint256) {
-        return _nonceSpace[owner];
+    function currentNonceSpace(address safe) external view returns (uint256) {
+        return _nonceSpace[safe];
     }
 
-    function isNonceUsable(address owner, uint256 nonceSpace, uint256 nonce) public view returns (bool) {
-        if (_nonceSpace[owner] != nonceSpace) return false;
+    function isNonceUsable(address safe, uint256 nonceSpace, uint256 nonce) public view returns (bool) {
+        if (_nonceSpace[safe] != nonceSpace) return false;
 
-        return !_revokedNonce[owner][nonceSpace][nonce];
+        return !_revokedNonce[safe][nonceSpace][nonce];
     }
 
     function isRedeemable(bytes32 id) public view returns (uint256) {
