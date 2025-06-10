@@ -148,6 +148,7 @@ contract SubscriptionModule {
         delete safeFromId[id];
         ids[subscriber].remove(id);
     }
+
     /*//////////////////////////////////////////////////////////////
                       INTERNAL CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////*/

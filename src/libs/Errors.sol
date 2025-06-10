@@ -16,11 +16,7 @@ library Errors {
 
     error InvalidSubscriber();
 
-    error NonceAlreadyRevoked(address addr, uint256 nonce);
-
     error NotRedeemable();
 
     error SingleStreamOnly();
-
-    error SubscriptionCancelled();
 }
