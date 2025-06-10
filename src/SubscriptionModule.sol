@@ -161,6 +161,10 @@ contract SubscriptionModule {
         return (block.timestamp - subscription.lastRedeemed) / subscription.frequency * subscription.amount;
     }
 
+    function isTrustedRequired(bytes32 id) external view returns (bool) {
+        return subscriptions[safeFromId[id]][id].requiresTrust;
+    }
+
     /*//////////////////////////////////////////////////////////////
                     INTERNAL NON-CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////*/
