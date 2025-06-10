@@ -162,7 +162,7 @@ contract SubscriptionModule {
     }
 
     function isTrustedRequired(bytes32 id) external view returns (bool) {
-        return subscriptions[safeFromId[id]][id].requiresTrust;
+        return subscriptions[safeFromId[id]][id].requireTrusted;
     }
 
     /*//////////////////////////////////////////////////////////////
