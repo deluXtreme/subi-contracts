@@ -142,7 +142,7 @@ contract SubscriptionModule {
         _unsubscribe(msg.sender, id);
     }
 
-    function unsubscribeMultiple(bytes32[] calldata _ids) external {
+    function unsubscribeMany(bytes32[] calldata _ids) external {
         for (uint256 i; i < _ids.length; ++i) {
             _unsubscribe(msg.sender, _ids[i]);
         }
