@@ -7,5 +7,4 @@ struct Subscription {
     uint256 amount;
     uint256 lastRedeemed;
     uint256 frequency;
-    uint256 nonce;
 }

@@ -40,8 +40,6 @@ contract SubscriptionModule {
 
     mapping(address safe => EnumerableSetLib.Bytes32Set) internal ids;
 
-    mapping(address safe => mapping(uint256 nonce => bool isRevoked)) internal _revokedNonce;
-
     /*//////////////////////////////////////////////////////////////
                                  EVENTS
     //////////////////////////////////////////////////////////////*/
@@ -50,28 +48,17 @@ contract SubscriptionModule {
 
     event Redeemed(bytes32 indexed id, Subscription indexed subscription);
 
-    event NonceRevoked(address indexed safe, uint256 indexed nonce);
-
     /*//////////////////////////////////////////////////////////////
                    USER-FACING NON-CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    function subscribe(
-        address recipient,
-        uint256 amount,
-        uint256 frequency,
-        uint256 nonce
-    )
-        external
-        returns (bytes32 id)
-    {
+    function subscribe(address recipient, uint256 amount, uint256 frequency) external returns (bytes32 id) {
         Subscription memory sub = Subscription({
             subscriber: msg.sender,
             recipient: recipient,
             amount: amount,
             lastRedeemed: block.timestamp - frequency,
-            frequency: frequency,
-            nonce: nonce
+            frequency: frequency
         });
 
         id = sub.compute();
@@ -96,7 +83,6 @@ contract SubscriptionModule {
         address safe = safeFromId[id];
         Subscription memory sub = subscriptions[safe][id];
 
-        require(isNonceUsable(safe, sub.nonce), Errors.SubscriptionCancelled());
         uint256 periods = (block.timestamp - sub.lastRedeemed) / sub.frequency;
         require(periods >= 1, Errors.NotRedeemable());
         TypeDefinitions.Stream memory stream = streams[0];
@@ -123,7 +109,6 @@ contract SubscriptionModule {
     }
 
     function cancel(bytes32 id) public {
-        _revokeNonce(msg.sender, subscriptions[msg.sender][id].nonce);
         ids[msg.sender].remove(id);
     }
 
@@ -141,10 +126,6 @@ contract SubscriptionModule {
         return ids[safe].values();
     }
 
-    function isNonceUsable(address safe, uint256 nonce) public view returns (bool) {
-        return !_revokedNonce[safe][nonce];
-    }
-
     function isRedeemable(bytes32 id) public view returns (uint256) {
         address safe = safeFromId[id];
         Subscription memory subscription = subscriptions[safe][id];
@@ -154,12 +135,4 @@ contract SubscriptionModule {
     /*//////////////////////////////////////////////////////////////
                     INTERNAL NON-CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////*/
-
-    function _revokeNonce(address safe, uint256 nonce) private {
-        if (_revokedNonce[safe][nonce]) {
-            revert Errors.NonceAlreadyRevoked({ addr: safe, nonce: nonce });
-        }
-        _revokedNonce[safe][nonce] = true;
-        emit NonceRevoked(safe, nonce);
-    }
 }
