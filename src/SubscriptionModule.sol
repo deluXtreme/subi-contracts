@@ -7,6 +7,7 @@ import { Errors } from "src/libs/Errors.sol";
 import { Subscription } from "src/libs/Types.sol";
 import { SubscriptionLib } from "src/libs/SubscriptionLib.sol";
 
+import { ERC1155 } from "@circles/src/circles/ERC1155.sol";
 import { IHubV2 } from "@circles/src/hub/IHub.sol";
 import { TypeDefinitions } from "@circles/src/hub/TypeDefinitions.sol";
 import { Enum } from "@safe-smart-account/contracts/common/Enum.sol";
@@ -52,14 +53,23 @@ contract SubscriptionModule {
                    USER-FACING NON-CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    function subscribe(address recipient, uint256 amount, uint256 frequency) external returns (bytes32 id) {
+    function subscribe(
+        address recipient,
+        uint256 amount,
+        uint256 frequency,
+        bool requireTrusted
+    )
+        external
+        returns (bytes32 id)
+    {
         require(frequency > 0, Errors.InvalidFrequency());
         Subscription memory sub = Subscription({
             subscriber: msg.sender,
             recipient: recipient,
             amount: amount,
             lastRedeemed: block.timestamp - frequency,
-            frequency: frequency
+            frequency: frequency,
+            requireTrusted: requireTrusted
         });
         id = sub.compute();
         _subscribe(msg.sender, id, sub);
@@ -76,13 +86,9 @@ contract SubscriptionModule {
     )
         external
     {
-        require(_exists(id), Errors.IdentifierNonexistent());
+        (address safe, Subscription memory sub) = _loadSubscription(id);
 
-        address safe = safeFromId[id];
-        Subscription memory sub = subscriptions[safe][id];
-
-        uint256 periods = (block.timestamp - sub.lastRedeemed) / sub.frequency;
-        require(periods >= 1, Errors.NotRedeemable());
+        uint256 periods = _requireRedeemablePeriods(sub);
 
         require(flowVertices[sourceCoordinate] == sub.subscriber, Errors.InvalidSubscriber());
 
@@ -92,15 +98,38 @@ contract SubscriptionModule {
 
         require(flow.extractAmount() == periods * sub.amount, Errors.InvalidAmount());
 
-        sub.lastRedeemed += periods * sub.frequency;
-
-        subscriptions[safe][id] = sub;
+        _applyRedemption(safe, id, sub, periods);
 
         require(
             ISafe(safe).execTransactionFromModule(
                 HUB,
                 0,
                 abi.encodeCall(IHubV2.operateFlowMatrix, (flowVertices, flow, streams, packedCoordinates)),
+                Enum.Operation.Call
+            ),
+            Errors.ExecutionFailed()
+        );
+
+        emit Redeemed(id, sub);
+    }
+
+    function redeemUntrusted(bytes32 id) external {
+        (address safe, Subscription memory sub) = _loadSubscription(id);
+
+        require(!sub.requireTrusted, Errors.TrustedPathOnly());
+
+        uint256 periods = _requireRedeemablePeriods(sub);
+
+        _applyRedemption(safe, id, sub, periods);
+
+        require(
+            ISafe(safe).execTransactionFromModule(
+                HUB,
+                0,
+                abi.encodeCall(
+                    ERC1155.safeTransferFrom,
+                    (sub.subscriber, sub.recipient, uint256(uint160(sub.subscriber)), periods * sub.amount, "")
+                ),
                 Enum.Operation.Call
             ),
             Errors.ExecutionFailed()
@@ -156,5 +185,21 @@ contract SubscriptionModule {
 
     function _exists(bytes32 id) internal view returns (bool) {
         return safeFromId[id] != address(0);
+    }
+
+    function _loadSubscription(bytes32 id) internal view returns (address safe, Subscription memory sub) {
+        require(_exists(id), Errors.IdentifierNonexistent());
+        safe = safeFromId[id];
+        sub = subscriptions[safe][id];
+    }
+
+    function _requireRedeemablePeriods(Subscription memory sub) internal view returns (uint256 periods) {
+        periods = (block.timestamp - sub.lastRedeemed) / sub.frequency;
+        require(periods >= 1, Errors.NotRedeemable());
+    }
+
+    function _applyRedemption(address safe, bytes32 id, Subscription memory sub, uint256 periods) internal {
+        sub.lastRedeemed += periods * sub.frequency;
+        subscriptions[safe][id] = sub;
     }
 }

@@ -21,4 +21,6 @@ library Errors {
     error NotRedeemable();
 
     error SingleStreamOnly();
+
+    error TrustedPathOnly();
 }
