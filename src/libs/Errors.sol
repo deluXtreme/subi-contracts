@@ -14,7 +14,7 @@ library Errors {
 
     error InvalidSubscriber();
 
-    error NonceAlreadyRevoked(address addr, uint256 space, uint256 nonce);
+    error NonceAlreadyRevoked(address addr, uint256 nonce);
 
     error NotRedeemable();
 

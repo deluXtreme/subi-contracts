@@ -38,11 +38,9 @@ contract SubscriptionModule {
 
     mapping(address safe => mapping(bytes32 id => Subscription subscription)) public subscriptions;
 
-    mapping(address safe => mapping(uint256 space => EnumerableSetLib.Bytes32Set)) internal ids;
+    mapping(address safe => EnumerableSetLib.Bytes32Set) internal ids;
 
-    mapping(address safe => mapping(uint256 space => mapping(uint256 nonce => bool isRevoked))) internal _revokedNonce;
-
-    mapping(address safe => uint256 space) internal _nonceSpace;
+    mapping(address safe => mapping(uint256 nonce => bool isRevoked)) internal _revokedNonce;
 
     /*//////////////////////////////////////////////////////////////
                                  EVENTS
@@ -52,9 +50,7 @@ contract SubscriptionModule {
 
     event Redeemed(bytes32 indexed id, Subscription indexed subscription);
 
-    event NonceRevoked(address indexed safe, uint256 indexed space, uint256 indexed nonce);
-
-    event NonceSpaceRevoked(address indexed safe, uint256 indexed space);
+    event NonceRevoked(address indexed safe, uint256 indexed nonce);
 
     /*//////////////////////////////////////////////////////////////
                    USER-FACING NON-CONSTANT FUNCTIONS
@@ -77,15 +73,14 @@ contract SubscriptionModule {
             frequency: frequency,
             nonce: nonce
         });
-        uint256 space = _nonceSpace[msg.sender];
 
         id = sub.compute();
-        require(!ids[msg.sender][space].contains(id), Errors.IdentifierExists());
+        require(!ids[msg.sender].contains(id), Errors.IdentifierExists());
         require(frequency > 0, Errors.InvalidFrequency());
 
         subscriptions[msg.sender][id] = sub;
         safeFromId[id] = msg.sender;
-        ids[msg.sender][space].add(id);
+        ids[msg.sender].add(id);
         emit SubscriptionCreated(id, sub);
     }
 
@@ -101,7 +96,7 @@ contract SubscriptionModule {
         address safe = safeFromId[id];
         Subscription memory sub = subscriptions[safe][id];
 
-        require(isNonceUsable(safe, _nonceSpace[safe], sub.nonce), Errors.SubscriptionCancelled());
+        require(isNonceUsable(safe, sub.nonce), Errors.SubscriptionCancelled());
         uint256 periods = (block.timestamp - sub.lastRedeemed) / sub.frequency;
         require(periods >= 1, Errors.NotRedeemable());
         TypeDefinitions.Stream memory stream = streams[0];
@@ -127,15 +122,9 @@ contract SubscriptionModule {
         emit Redeemed(id, sub);
     }
 
-    function cancelAll() external returns (uint256) {
-        emit NonceSpaceRevoked(msg.sender, _nonceSpace[msg.sender]);
-        return ++_nonceSpace[msg.sender];
-    }
-
     function cancel(bytes32 id) public {
-        uint256 space = _nonceSpace[msg.sender];
-        _revokeNonce(msg.sender, space, subscriptions[msg.sender][id].nonce);
-        ids[msg.sender][space].remove(id);
+        _revokeNonce(msg.sender, subscriptions[msg.sender][id].nonce);
+        ids[msg.sender].remove(id);
     }
 
     function cancelMultiple(bytes32[] calldata _ids) external {
@@ -149,17 +138,11 @@ contract SubscriptionModule {
     //////////////////////////////////////////////////////////////*/
 
     function getSubscriptionIds(address safe) external view returns (bytes32[] memory) {
-        return ids[safe][_nonceSpace[safe]].values();
+        return ids[safe].values();
     }
 
-    function currentNonceSpace(address safe) external view returns (uint256) {
-        return _nonceSpace[safe];
-    }
-
-    function isNonceUsable(address safe, uint256 nonceSpace, uint256 nonce) public view returns (bool) {
-        if (_nonceSpace[safe] != nonceSpace) return false;
-
-        return !_revokedNonce[safe][nonceSpace][nonce];
+    function isNonceUsable(address safe, uint256 nonce) public view returns (bool) {
+        return !_revokedNonce[safe][nonce];
     }
 
     function isRedeemable(bytes32 id) public view returns (uint256) {
@@ -172,11 +155,11 @@ contract SubscriptionModule {
                     INTERNAL NON-CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    function _revokeNonce(address safe, uint256 sapce, uint256 nonce) private {
-        if (_revokedNonce[safe][sapce][nonce]) {
-            revert Errors.NonceAlreadyRevoked({ addr: safe, space: sapce, nonce: nonce });
+    function _revokeNonce(address safe, uint256 nonce) private {
+        if (_revokedNonce[safe][nonce]) {
+            revert Errors.NonceAlreadyRevoked({ addr: safe, nonce: nonce });
         }
-        _revokedNonce[safe][sapce][nonce] = true;
-        emit NonceRevoked(safe, sapce, nonce);
+        _revokedNonce[safe][nonce] = true;
+        emit NonceRevoked(safe, nonce);
     }
 }
