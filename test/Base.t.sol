@@ -43,7 +43,7 @@ abstract contract Base_Test is Assertions, Utils, Modifiers {
         defaults.setUsers(users);
         setVariables(defaults, users);
 
-        vm.warp({ newTimestamp: START_TIME });
+        vm.warp({ newTimestamp: defaults.START_TIME() });
 
         vm.startPrank({ msgSender: users.sender });
     }
