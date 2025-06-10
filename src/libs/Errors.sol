@@ -16,6 +16,8 @@ library Errors {
 
     error InvalidSubscriber();
 
+    error InvalidStreamSource();
+
     error NotRedeemable();
 
     error SingleStreamOnly();

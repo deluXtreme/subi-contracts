@@ -21,13 +21,13 @@ library CirclesLib {
     }
 
     /// @notice Verify that every flow edge in the given stream routes to the specified recipient.
-    /// @param stream A Stream struct whose flow edge ids define how many edges to check.
+    /// @param streams A Stream struct whose flow edge ids define how many edges to check.
     /// @param recipient The address that each to index must match.
     /// @param flowVertices The list of all addresses (vertices) used to resolve each to index.
     /// @param coordinates Packed coordinates for this stream.
     /// @return success True if every extracted to address equals `recipient`, otherwise false.
     function checkRecipients(
-        TypeDefinitions.Stream memory stream,
+        TypeDefinitions.Stream[] calldata streams,
         address recipient,
         address[] calldata flowVertices,
         bytes calldata coordinates
@@ -36,13 +36,27 @@ library CirclesLib {
         pure
         returns (bool)
     {
+        TypeDefinitions.Stream memory stream = streams[streams.length - 1];
         uint256 edgeCount = stream.flowEdgeIds.length;
         for (uint256 i = 0; i < edgeCount; i++) {
             uint256 start = 6 * stream.flowEdgeIds[i] + 4;
             uint256 toIndex = slice(coordinates, start, start + 2);
             if (flowVertices[toIndex] != recipient) return false;
         }
+        return true;
+    }
 
+    function checkSource(
+        TypeDefinitions.Stream[] calldata streams,
+        uint256 sourceCoordinate
+    )
+        internal
+        pure
+        returns (bool success)
+    {
+        for (uint256 i; i < streams.length; ++i) {
+            if (streams[i].sourceCoordinate != sourceCoordinate) return false;
+        }
         return true;
     }
 

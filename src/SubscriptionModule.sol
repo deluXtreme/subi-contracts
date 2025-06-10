@@ -23,7 +23,7 @@ contract SubscriptionModule {
 
     using CirclesLib for TypeDefinitions.FlowEdge[];
 
-    using CirclesLib for TypeDefinitions.Stream;
+    using CirclesLib for TypeDefinitions.Stream[];
 
     /*//////////////////////////////////////////////////////////////
                             STATE VARIABLES
@@ -71,7 +71,8 @@ contract SubscriptionModule {
         address[] calldata flowVertices,
         TypeDefinitions.FlowEdge[] calldata flow,
         TypeDefinitions.Stream[] calldata streams,
-        bytes calldata packedCoordinates
+        bytes calldata packedCoordinates,
+        uint256 sourceCoordinate
     )
         external
     {
@@ -83,11 +84,11 @@ contract SubscriptionModule {
         uint256 periods = (block.timestamp - sub.lastRedeemed) / sub.frequency;
         require(periods >= 1, Errors.NotRedeemable());
 
-        TypeDefinitions.Stream memory stream = streams[0];
-        require(streams.length == 1, Errors.SingleStreamOnly());
-        require(flowVertices[stream.sourceCoordinate] == sub.subscriber, Errors.InvalidSubscriber());
+        require(flowVertices[sourceCoordinate] == sub.subscriber, Errors.InvalidSubscriber());
 
-        require(stream.checkRecipients(sub.recipient, flowVertices, packedCoordinates), Errors.InvalidRecipient());
+        require(streams.checkSource(sourceCoordinate), Errors.InvalidStreamSource());
+
+        require(streams.checkRecipients(sub.recipient, flowVertices, packedCoordinates), Errors.InvalidRecipient());
 
         require(flow.extractAmount() == periods * sub.amount, Errors.InvalidAmount());
 
