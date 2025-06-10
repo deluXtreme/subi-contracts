@@ -121,9 +121,8 @@ contract SubscriptionModule {
         return ids[safe].values();
     }
 
-    function isRedeemable(bytes32 id) public view returns (uint256) {
-        address safe = safeFromId[id];
-        Subscription memory subscription = subscriptions[safe][id];
+    function isValidOrRedeemable(bytes32 id) public view returns (uint256) {
+        Subscription memory subscription = subscriptions[safeFromId[id]][id];
         return (block.timestamp - subscription.lastRedeemed) / subscription.frequency * subscription.amount;
     }
 
