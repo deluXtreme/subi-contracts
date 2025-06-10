@@ -73,7 +73,7 @@ contract SubscriptionModule {
             subscriber: msg.sender,
             recipient: recipient,
             amount: amount,
-            lastRedeemed: 0,
+            lastRedeemed: block.timestamp - frequency,
             frequency: frequency,
             nonce: nonce
         });
