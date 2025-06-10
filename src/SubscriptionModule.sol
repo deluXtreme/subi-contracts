@@ -53,6 +53,7 @@ contract SubscriptionModule {
     //////////////////////////////////////////////////////////////*/
 
     function subscribe(address recipient, uint256 amount, uint256 frequency) external returns (bytes32 id) {
+        require(frequency > 0, Errors.InvalidFrequency());
         Subscription memory sub = Subscription({
             subscriber: msg.sender,
             recipient: recipient,
@@ -60,14 +61,8 @@ contract SubscriptionModule {
             lastRedeemed: block.timestamp - frequency,
             frequency: frequency
         });
-
         id = sub.compute();
-        require(!ids[msg.sender].contains(id), Errors.IdentifierExists());
-        require(frequency > 0, Errors.InvalidFrequency());
-
-        subscriptions[msg.sender][id] = sub;
-        safeFromId[id] = msg.sender;
-        ids[msg.sender].add(id);
+        _subscribe(msg.sender, id, sub);
         emit SubscriptionCreated(id, sub);
     }
 
@@ -108,13 +103,13 @@ contract SubscriptionModule {
         emit Redeemed(id, sub);
     }
 
-    function cancel(bytes32 id) public {
-        ids[msg.sender].remove(id);
+    function unsubscribe(bytes32 id) external {
+        _unsubscribe(msg.sender, id);
     }
 
-    function cancelMultiple(bytes32[] calldata _ids) external {
+    function unsubscribeMultiple(bytes32[] calldata _ids) external {
         for (uint256 i; i < _ids.length; ++i) {
-            cancel(_ids[i]);
+            _unsubscribe(msg.sender, _ids[i]);
         }
     }
 
@@ -135,4 +130,25 @@ contract SubscriptionModule {
     /*//////////////////////////////////////////////////////////////
                     INTERNAL NON-CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////*/
+
+    function _subscribe(address subscriber, bytes32 id, Subscription memory subscription) internal {
+        require(!_exists(id), Errors.IdentifierExists());
+        subscriptions[subscriber][id] = subscription;
+        safeFromId[id] = subscriber;
+        ids[subscriber].add(id);
+    }
+
+    function _unsubscribe(address subscriber, bytes32 id) internal {
+        require(_exists(id), Errors.IdentifierNonexistent());
+        delete subscriptions[subscriber][id];
+        delete safeFromId[id];
+        ids[subscriber].remove(id);
+    }
+    /*//////////////////////////////////////////////////////////////
+                      INTERNAL CONSTANT FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+
+    function _exists(bytes32 id) internal view returns (bool) {
+        return safeFromId[id] != address(0);
+    }
 }

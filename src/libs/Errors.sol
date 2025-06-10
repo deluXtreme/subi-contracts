@@ -8,6 +8,8 @@ library Errors {
 
     error IdentifierExists();
 
+    error IdentifierNonexistent();
+
     error InvalidFrequency();
 
     error InvalidRecipient();
