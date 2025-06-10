@@ -75,15 +75,20 @@ contract SubscriptionModule {
     )
         external
     {
+        require(_exists(id), Errors.IdentifierNonexistent());
+
         address safe = safeFromId[id];
         Subscription memory sub = subscriptions[safe][id];
 
         uint256 periods = (block.timestamp - sub.lastRedeemed) / sub.frequency;
         require(periods >= 1, Errors.NotRedeemable());
+
         TypeDefinitions.Stream memory stream = streams[0];
         require(streams.length == 1, Errors.SingleStreamOnly());
         require(flowVertices[stream.sourceCoordinate] == sub.subscriber, Errors.InvalidSubscriber());
+
         require(stream.checkRecipients(sub.recipient, flowVertices, packedCoordinates), Errors.InvalidRecipient());
+
         require(flow.extractAmount() == periods * sub.amount, Errors.InvalidAmount());
 
         sub.lastRedeemed += periods * sub.frequency;
