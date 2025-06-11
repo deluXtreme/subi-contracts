@@ -30,4 +30,13 @@ abstract contract Modifiers is Constants, Utils {
     modifier givenIdentifierExists() {
         _;
     }
+
+    modifier whenFrequencyGtZero() {
+        _;
+    }
+
+    modifier whenCallerSubscriber() {
+        resetPrank({ msgSender: users.subscriber });
+        _;
+    }
 }
