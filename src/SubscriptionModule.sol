@@ -37,7 +37,7 @@ contract SubscriptionModule {
 
     mapping(bytes32 id => address safe) public safeFromId;
 
-    mapping(address safe => mapping(bytes32 id => Subscription subscription)) public subscriptions;
+    mapping(address safe => mapping(bytes32 id => Subscription subscription)) internal _subscriptions;
 
     mapping(address safe => EnumerableSetLib.Bytes32Set) internal ids;
 
@@ -168,17 +168,21 @@ contract SubscriptionModule {
                      USER-FACING CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
+    function getSubscription(address safe, bytes32 id) external view returns (Subscription memory) {
+        return _subscriptions[safe][id];
+    }
+
     function getSubscriptionIds(address safe) external view returns (bytes32[] memory) {
         return ids[safe].values();
     }
 
     function isValidOrRedeemable(bytes32 id) public view returns (uint256) {
-        Subscription memory subscription = subscriptions[safeFromId[id]][id];
+        Subscription memory subscription = _subscriptions[safeFromId[id]][id];
         return (block.timestamp - subscription.lastRedeemed) / subscription.frequency * subscription.amount;
     }
 
     function isTrustedRequired(bytes32 id) external view returns (bool) {
-        return subscriptions[safeFromId[id]][id].requireTrusted;
+        return _subscriptions[safeFromId[id]][id].requireTrusted;
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -187,14 +191,14 @@ contract SubscriptionModule {
 
     function _subscribe(address subscriber, bytes32 id, Subscription memory subscription) internal {
         require(!_exists(id), Errors.IdentifierExists());
-        subscriptions[subscriber][id] = subscription;
+        _subscriptions[subscriber][id] = subscription;
         safeFromId[id] = subscriber;
         ids[subscriber].add(id);
     }
 
     function _unsubscribe(address subscriber, bytes32 id) internal {
         require(_exists(id), Errors.IdentifierNonexistent());
-        delete subscriptions[subscriber][id];
+        delete _subscriptions[subscriber][id];
         delete safeFromId[id];
         ids[subscriber].remove(id);
     }
@@ -210,7 +214,7 @@ contract SubscriptionModule {
     function _loadSubscription(bytes32 id) internal view returns (address safe, Subscription memory sub) {
         require(_exists(id), Errors.IdentifierNonexistent());
         safe = safeFromId[id];
-        sub = subscriptions[safe][id];
+        sub = _subscriptions[safe][id];
     }
 
     function _requireRedeemablePeriods(Subscription memory sub) internal view returns (uint256 periods) {
@@ -220,6 +224,6 @@ contract SubscriptionModule {
 
     function _applyRedemption(address safe, bytes32 id, Subscription memory sub, uint256 periods) internal {
         sub.lastRedeemed += periods * sub.frequency;
-        subscriptions[safe][id] = sub;
+        _subscriptions[safe][id] = sub;
     }
 }
