@@ -1,0 +1,7 @@
+subscribe.t.sol
+├── given the identifier already exists
+│   └── it should revert
+└── given the identifier does not exist
+    ├── it should store the subscription under the subscriber and id
+    ├── it should map the id to the subscriber
+    └── it should add the id into the subscriber’s id‐set

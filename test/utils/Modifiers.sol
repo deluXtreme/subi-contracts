@@ -22,4 +22,8 @@ abstract contract Modifiers is Constants, Utils {
         defaults = _defaults;
         users = _users;
     }
+
+    modifier givenIdentifierNotExists() {
+        _;
+    }
 }
