@@ -71,7 +71,7 @@ contract Subscribe_Unit_Fuzz_Test is Base_Test {
         address recipient,
         uint256 amount,
         uint256 frequency,
-        bool requiredTrusted
+        bool requireTrusted
     )
         external
         whenCallerSubscriber
@@ -80,21 +80,29 @@ contract Subscribe_Unit_Fuzz_Test is Base_Test {
     {
         frequency = bound(frequency, 1, vm.getBlockTimestamp());
 
-        Subscription memory subscription = Subscription({
+        Subscription memory sub = Subscription({
             subscriber: users.subscriber,
             recipient: recipient,
             amount: amount,
             lastRedeemed: vm.getBlockTimestamp() - frequency,
             frequency: frequency,
-            requireTrusted: requiredTrusted
+            requireTrusted: requireTrusted
         });
 
         vm.expectEmit();
-        emit SubscriptionModule.SubscriptionCreated(subscription.compute(), subscription);
+        emit SubscriptionModule.SubscriptionCreated(
+            sub.compute(),
+            users.subscriber,
+            recipient,
+            amount,
+            vm.getBlockTimestamp() - frequency,
+            frequency,
+            requireTrusted
+        );
 
-        bytes32 id = module.subscribe(recipient, amount, frequency, requiredTrusted);
+        bytes32 id = module.subscribe(recipient, amount, frequency, requireTrusted);
 
-        assertEq(module.getSubscription(users.subscriber, id), subscription);
+        assertEq(module.getSubscription(users.subscriber, id), sub);
         assertEq(module.safeFromId(id), users.subscriber);
         bytes32[] memory ids = new bytes32[](1);
         ids[0] = id;
