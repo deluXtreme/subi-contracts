@@ -45,9 +45,25 @@ contract SubscriptionModule {
                                  EVENTS
     //////////////////////////////////////////////////////////////*/
 
-    event SubscriptionCreated(bytes32 indexed id, Subscription indexed subscription);
+    event SubscriptionCreated(
+        bytes32 indexed id,
+        address indexed subscriber,
+        address indexed recipient,
+        uint256 amount,
+        uint256 lastRedeemed,
+        uint256 frequency,
+        bool requireTrusted
+    );
 
-    event Redeemed(bytes32 indexed id, Subscription indexed subscription);
+    event Redeemed(
+        bytes32 indexed id,
+        address indexed subscriber,
+        address indexed recipient,
+        uint256 amount,
+        uint256 lastRedeemed,
+        uint256 frequency,
+        bool requireTrusted
+    );
 
     /*//////////////////////////////////////////////////////////////
                    USER-FACING NON-CONSTANT FUNCTIONS
@@ -73,7 +89,9 @@ contract SubscriptionModule {
         });
         id = sub.compute();
         _subscribe(msg.sender, id, sub);
-        emit SubscriptionCreated(id, sub);
+        emit SubscriptionCreated(
+            id, msg.sender, recipient, amount, block.timestamp - frequency, frequency, requireTrusted
+        );
     }
 
     function redeem(
@@ -110,7 +128,7 @@ contract SubscriptionModule {
             Errors.ExecutionFailed()
         );
 
-        emit Redeemed(id, sub);
+        emit Redeemed(id, safe, sub.recipient, sub.amount, sub.lastRedeemed, sub.frequency, sub.requireTrusted);
     }
 
     function redeemUntrusted(bytes32 id) external {
@@ -135,7 +153,7 @@ contract SubscriptionModule {
             Errors.ExecutionFailed()
         );
 
-        emit Redeemed(id, sub);
+        emit Redeemed(id, safe, sub.recipient, sub.amount, sub.lastRedeemed, sub.frequency, sub.requireTrusted);
     }
 
     function unsubscribe(bytes32 id) external {
