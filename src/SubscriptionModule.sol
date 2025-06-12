@@ -31,7 +31,7 @@ contract SubscriptionModule {
     //////////////////////////////////////////////////////////////*/
 
     string public constant NAME = "Subscription Module";
-    string public constant VERSION = "0.0.1";
+    string public constant VERSION = "0.1.0";
 
     address public constant HUB = 0xc12C1E50ABB450d6205Ea2C3Fa861b3B834d13e8;
 
@@ -59,9 +59,7 @@ contract SubscriptionModule {
         bytes32 indexed id,
         address indexed subscriber,
         address indexed recipient,
-        uint256 amount,
         uint256 lastRedeemed,
-        uint256 frequency,
         bool requireTrusted
     );
 
