@@ -1,0 +1,396 @@
+{
+    "0": {
+        "from": "0xede0c2e70e8e2d54609c1bdf79595506b6f623fe",
+        "to": "0xc4bc837b60af3a0731d2e494bb8f998e3904d94a",
+        "value": 2000000000000000000,
+        "inputs": {
+            "flow_vertices": [
+                "0x14aab8d72b68c79cbb7873d003585a7c3ef98633",
+                "0x742b7dbb0f1d330a83497df79075ebc778e6e698",
+                "0x98447cfa26a6333668efcdfd8cd811df3e70b59a",
+                "0xc4bc837b60af3a0731d2e494bb8f998e3904d94a",
+                "0xddaa2e8b53a8a62a9e142565d830db997d528487",
+                "0xede0c2e70e8e2d54609c1bdf79595506b6f623fe"
+            ],
+            "flow": [
+                {
+                    "stream_sink_id": 0,
+                    "amount": 2000000000000000000
+                },
+                {
+                    "stream_sink_id": 1,
+                    "amount": 1235851000000000000
+                },
+                {
+                    "stream_sink_id": 1,
+                    "amount": 764149000000000000
+                }
+            ],
+            "streams": [
+                {
+                    "source_coordinate": 5,
+                    "flow_edge_ids": [
+                        1,
+                        2
+                    ],
+                    "data": "0x"
+                }
+            ],
+            "packed_coordinates": "0x000200050004000100040003000000040003",
+            "source_coordinate": 5
+        }
+    },
+    "1": {
+        "from": "0xede0c2e70e8e2d54609c1bdf79595506b6f623fe",
+        "to": "0x97fd8f7829a019946329f6d2e763a72741047518",
+        "value": 2000000000000000000,
+        "inputs": {
+            "flow_vertices": [
+                "0x57928fb15ffb7303b65edc326dc4dc38150008e1",
+                "0x86533d1ada8ffbe7b6f7244f9a1b707f7f3e239b",
+                "0x97fd8f7829a019946329f6d2e763a72741047518",
+                "0x98447cfa26a6333668efcdfd8cd811df3e70b59a",
+                "0xa571627c6ce9c7faebd2ae67cc9212787ad77f0c",
+                "0xddaa2e8b53a8a62a9e142565d830db997d528487",
+                "0xede0c2e70e8e2d54609c1bdf79595506b6f623fe"
+            ],
+            "flow": [
+                {
+                    "stream_sink_id": 0,
+                    "amount": 2000000000000000000
+                },
+                {
+                    "stream_sink_id": 0,
+                    "amount": 1703637000000000000
+                },
+                {
+                    "stream_sink_id": 1,
+                    "amount": 2000000000000000000
+                },
+                {
+                    "stream_sink_id": 0,
+                    "amount": 296363000000000000
+                }
+            ],
+            "streams": [
+                {
+                    "source_coordinate": 6,
+                    "flow_edge_ids": [
+                        2
+                    ],
+                    "data": "0x"
+                }
+            ],
+            "packed_coordinates": "0x000300060005000000050004000100040002000400050004",
+            "source_coordinate": 6
+        }
+    },
+    "2": {
+        "from": "0xede0c2e70e8e2d54609c1bdf79595506b6f623fe",
+        "to": "0x749c930256b47049cb65adcd7c25e72d5de44b3b",
+        "value": 2000000000000000000,
+        "inputs": {
+            "flow_vertices": [
+                "0x13285c44f9b70c807085621b9e1dd66c9daf23a8",
+                "0x57928fb15ffb7303b65edc326dc4dc38150008e1",
+                "0x749c930256b47049cb65adcd7c25e72d5de44b3b",
+                "0x98447cfa26a6333668efcdfd8cd811df3e70b59a",
+                "0xddaa2e8b53a8a62a9e142565d830db997d528487",
+                "0xede0c2e70e8e2d54609c1bdf79595506b6f623fe"
+            ],
+            "flow": [
+                {
+                    "stream_sink_id": 0,
+                    "amount": 2000000000000000000
+                },
+                {
+                    "stream_sink_id": 1,
+                    "amount": 1703637000000000000
+                },
+                {
+                    "stream_sink_id": 1,
+                    "amount": 296363000000000000
+                }
+            ],
+            "streams": [
+                {
+                    "source_coordinate": 5,
+                    "flow_edge_ids": [
+                        1,
+                        2
+                    ],
+                    "data": "0x"
+                }
+            ],
+            "packed_coordinates": "0x000300050004000100040002000000040002",
+            "source_coordinate": 5
+        }
+    },
+    "3": {
+        "from": "0xede0c2e70e8e2d54609c1bdf79595506b6f623fe",
+        "to": "0x0afd8899bca011bb95611409f09c8efbf6b169cf",
+        "value": 2000000000000000000,
+        "inputs": {
+            "flow_vertices": [
+                "0x0afd8899bca011bb95611409f09c8efbf6b169cf",
+                "0x1aca75e38263c79d9d4f10df0635cc6fcfe6f026",
+                "0x98447cfa26a6333668efcdfd8cd811df3e70b59a",
+                "0xede0c2e70e8e2d54609c1bdf79595506b6f623fe",
+                "0xf7bd3d83df90b4682725adf668791d4d1499207f"
+            ],
+            "flow": [
+                {
+                    "stream_sink_id": 0,
+                    "amount": 2000000000000000000
+                },
+                {
+                    "stream_sink_id": 1,
+                    "amount": 2000000000000000000
+                }
+            ],
+            "streams": [
+                {
+                    "source_coordinate": 3,
+                    "flow_edge_ids": [
+                        1
+                    ],
+                    "data": "0x"
+                }
+            ],
+            "packed_coordinates": "0x000200030004000100040000",
+            "source_coordinate": 3
+        }
+    },
+    "4": {
+        "from": "0xede0c2e70e8e2d54609c1bdf79595506b6f623fe",
+        "to": "0xd14ce9cfc6384590c6b77436dca212a6bcb2575f",
+        "value": 2000000000000000000,
+        "inputs": {
+            "flow_vertices": [
+                "0x323c33a438d177efc57c22d861e1861e2c2ab68e",
+                "0x4024a088b3ee37fbc71a6fc43c325d4b11bef5cb",
+                "0x98447cfa26a6333668efcdfd8cd811df3e70b59a",
+                "0xd14ce9cfc6384590c6b77436dca212a6bcb2575f",
+                "0xddaa2e8b53a8a62a9e142565d830db997d528487",
+                "0xede0c2e70e8e2d54609c1bdf79595506b6f623fe"
+            ],
+            "flow": [
+                {
+                    "stream_sink_id": 0,
+                    "amount": 2000000000000000000
+                },
+                {
+                    "stream_sink_id": 1,
+                    "amount": 996822000000000000
+                },
+                {
+                    "stream_sink_id": 1,
+                    "amount": 1003178000000000000
+                }
+            ],
+            "streams": [
+                {
+                    "source_coordinate": 5,
+                    "flow_edge_ids": [
+                        1,
+                        2
+                    ],
+                    "data": "0x"
+                }
+            ],
+            "packed_coordinates": "0x000200050004000000040003000100040003",
+            "source_coordinate": 5
+        }
+    },
+    "5": {
+        "from": "0xede0c2e70e8e2d54609c1bdf79595506b6f623fe",
+        "to": "0x917ecb71e734ae96bcf0eab05480328d7e391c64",
+        "value": 2000000000000000000,
+        "inputs": {
+            "flow_vertices": [
+                "0x323c33a438d177efc57c22d861e1861e2c2ab68e",
+                "0x6b050eb17408d3da80eaa2eda1331d646dcf5075",
+                "0x917ecb71e734ae96bcf0eab05480328d7e391c64",
+                "0x98447cfa26a6333668efcdfd8cd811df3e70b59a",
+                "0xddaa2e8b53a8a62a9e142565d830db997d528487",
+                "0xede0c2e70e8e2d54609c1bdf79595506b6f623fe"
+            ],
+            "flow": [
+                {
+                    "stream_sink_id": 0,
+                    "amount": 2000000000000000000
+                },
+                {
+                    "stream_sink_id": 1,
+                    "amount": 996822000000000000
+                },
+                {
+                    "stream_sink_id": 1,
+                    "amount": 1003178000000000000
+                }
+            ],
+            "streams": [
+                {
+                    "source_coordinate": 5,
+                    "flow_edge_ids": [
+                        1,
+                        2
+                    ],
+                    "data": "0x"
+                }
+            ],
+            "packed_coordinates": "0x000300050004000000040002000100040002",
+            "source_coordinate": 5
+        }
+    },
+    "6": {
+        "from": "0xede0c2e70e8e2d54609c1bdf79595506b6f623fe",
+        "to": "0xefedd902bc1a3aaab3407081ec0e791e3abf3838",
+        "value": 2000000000000000000,
+        "inputs": {
+            "flow_vertices": [
+                "0x57928fb15ffb7303b65edc326dc4dc38150008e1",
+                "0x98447cfa26a6333668efcdfd8cd811df3e70b59a",
+                "0xebfbf7a3006104fb1d3b68529a7b1b584acf4203",
+                "0xede0c2e70e8e2d54609c1bdf79595506b6f623fe",
+                "0xefedd902bc1a3aaab3407081ec0e791e3abf3838"
+            ],
+            "flow": [
+                {
+                    "stream_sink_id": 0,
+                    "amount": 2000000000000000000
+                },
+                {
+                    "stream_sink_id": 1,
+                    "amount": 2000000000000000000
+                }
+            ],
+            "streams": [
+                {
+                    "source_coordinate": 3,
+                    "flow_edge_ids": [
+                        1
+                    ],
+                    "data": "0x"
+                }
+            ],
+            "packed_coordinates": "0x000100030000000200000004",
+            "source_coordinate": 3
+        }
+    },
+    "7": {
+        "from": "0xede0c2e70e8e2d54609c1bdf79595506b6f623fe",
+        "to": "0x6e4d027fd576398f2082aa80a52fcf34d774f7ce",
+        "value": 2000000000000000000,
+        "inputs": {
+            "flow_vertices": [
+                "0x60fd0a65571446161ff1516cbf4f38e42664790c",
+                "0x6b69683c8897e3d18e74b1ba117b49f80423da5d",
+                "0x6e4d027fd576398f2082aa80a52fcf34d774f7ce",
+                "0xede0c2e70e8e2d54609c1bdf79595506b6f623fe",
+                "0xf1ea6a6b32ce7d24dc3e56dda287775af92c52d6"
+            ],
+            "flow": [
+                {
+                    "stream_sink_id": 0,
+                    "amount": 2000000000000000000
+                },
+                {
+                    "stream_sink_id": 1,
+                    "amount": 31783000000000000
+                },
+                {
+                    "stream_sink_id": 1,
+                    "amount": 1968217000000000000
+                }
+            ],
+            "streams": [
+                {
+                    "source_coordinate": 3,
+                    "flow_edge_ids": [
+                        1,
+                        2
+                    ],
+                    "data": "0x"
+                }
+            ],
+            "packed_coordinates": "0x000300030001000400010002000000010002",
+            "source_coordinate": 3
+        }
+    },
+    "8": {
+        "from": "0xede0c2e70e8e2d54609c1bdf79595506b6f623fe",
+        "to": "0xefedd902bc1a3aaab3407081ec0e791e3abf3838",
+        "value": 2000000000000000000,
+        "inputs": {
+            "flow_vertices": [
+                "0x57928fb15ffb7303b65edc326dc4dc38150008e1",
+                "0x98447cfa26a6333668efcdfd8cd811df3e70b59a",
+                "0xebfbf7a3006104fb1d3b68529a7b1b584acf4203",
+                "0xede0c2e70e8e2d54609c1bdf79595506b6f623fe",
+                "0xefedd902bc1a3aaab3407081ec0e791e3abf3838"
+            ],
+            "flow": [
+                {
+                    "stream_sink_id": 0,
+                    "amount": 2000000000000000000
+                },
+                {
+                    "stream_sink_id": 1,
+                    "amount": 2000000000000000000
+                }
+            ],
+            "streams": [
+                {
+                    "source_coordinate": 3,
+                    "flow_edge_ids": [
+                        1
+                    ],
+                    "data": "0x"
+                }
+            ],
+            "packed_coordinates": "0x000100030000000200000004",
+            "source_coordinate": 3
+        }
+    },
+    "9": {
+        "from": "0xede0c2e70e8e2d54609c1bdf79595506b6f623fe",
+        "to": "0x6e4d027fd576398f2082aa80a52fcf34d774f7ce",
+        "value": 2000000000000000000,
+        "inputs": {
+            "flow_vertices": [
+                "0x60fd0a65571446161ff1516cbf4f38e42664790c",
+                "0x6b69683c8897e3d18e74b1ba117b49f80423da5d",
+                "0x6e4d027fd576398f2082aa80a52fcf34d774f7ce",
+                "0xede0c2e70e8e2d54609c1bdf79595506b6f623fe",
+                "0xf1ea6a6b32ce7d24dc3e56dda287775af92c52d6"
+            ],
+            "flow": [
+                {
+                    "stream_sink_id": 0,
+                    "amount": 2000000000000000000
+                },
+                {
+                    "stream_sink_id": 1,
+                    "amount": 31783000000000000
+                },
+                {
+                    "stream_sink_id": 1,
+                    "amount": 1968217000000000000
+                }
+            ],
+            "streams": [
+                {
+                    "source_coordinate": 3,
+                    "flow_edge_ids": [
+                        1,
+                        2
+                    ],
+                    "data": "0x"
+                }
+            ],
+            "packed_coordinates": "0x000300030001000400010002000000010002",
+            "source_coordinate": 3
+        }
+    }
+}

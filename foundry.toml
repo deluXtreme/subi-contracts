@@ -2,12 +2,13 @@
 
 [profile.default]
 auto_detect_solc = false
-block_timestamp = 1_738_368_000 # Feb 1, 2025 at 00:00 GMT
+block_timestamp = 1_738_368_000                     # Feb 1, 2025 at 00:00 GMT
 fuzz = { runs = 1_000 }
 gas_reports = ["*"]
 optimizer = true
 optimizer_runs = 10_000
 solc = "0.8.28"
+fs_permissions = [{ access = "read", path = "./" }]
 
 
 [profile.ci]
@@ -28,4 +29,4 @@ tab_width = 4
 wrap_comments = true
 
 [rpc_endpoints]
-gnosis_chain = "https://rpc.gnosischain.com"
+gnosis = "${RPC_URL}"
