@@ -31,7 +31,7 @@ contract SubscriptionModule {
     //////////////////////////////////////////////////////////////*/
 
     string public constant NAME = "Subscription Module";
-    string public constant VERSION = "0.0.1";
+    string public constant VERSION = "0.1.0";
 
     address public constant HUB = 0xc12C1E50ABB450d6205Ea2C3Fa861b3B834d13e8;
 
@@ -45,9 +45,23 @@ contract SubscriptionModule {
                                  EVENTS
     //////////////////////////////////////////////////////////////*/
 
-    event SubscriptionCreated(bytes32 indexed id, Subscription indexed subscription);
+    event SubscriptionCreated(
+        bytes32 indexed id,
+        address indexed subscriber,
+        address indexed recipient,
+        uint256 amount,
+        uint256 lastRedeemed,
+        uint256 frequency,
+        bool requireTrusted
+    );
 
-    event Redeemed(bytes32 indexed id, Subscription indexed subscription);
+    event Redeemed(
+        bytes32 indexed id,
+        address indexed subscriber,
+        address indexed recipient,
+        uint256 lastRedeemed,
+        bool requireTrusted
+    );
 
     /*//////////////////////////////////////////////////////////////
                    USER-FACING NON-CONSTANT FUNCTIONS
@@ -73,7 +87,9 @@ contract SubscriptionModule {
         });
         id = sub.compute();
         _subscribe(msg.sender, id, sub);
-        emit SubscriptionCreated(id, sub);
+        emit SubscriptionCreated(
+            id, msg.sender, recipient, amount, block.timestamp - frequency, frequency, requireTrusted
+        );
     }
 
     function redeem(
@@ -110,7 +126,7 @@ contract SubscriptionModule {
             Errors.ExecutionFailed()
         );
 
-        emit Redeemed(id, sub);
+        emit Redeemed(id, safe, sub.recipient, sub.lastRedeemed, sub.requireTrusted);
     }
 
     function redeemUntrusted(bytes32 id) external {
@@ -135,7 +151,7 @@ contract SubscriptionModule {
             Errors.ExecutionFailed()
         );
 
-        emit Redeemed(id, sub);
+        emit Redeemed(id, safe, sub.recipient, sub.lastRedeemed, sub.requireTrusted);
     }
 
     function unsubscribe(bytes32 id) external {
