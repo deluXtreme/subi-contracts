@@ -29,4 +29,5 @@ tab_width = 4
 wrap_comments = true
 
 [rpc_endpoints]
-gnosis = "${RPC_URL}"
+# gnosis = "${RPC_URL}"
+gnosis = "https://rpc.gnosischain.com"
