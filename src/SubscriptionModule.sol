@@ -126,7 +126,7 @@ contract SubscriptionModule {
             Errors.ExecutionFailed()
         );
 
-        emit Redeemed(id, safe, sub.recipient, sub.amount, sub.lastRedeemed, sub.frequency, sub.requireTrusted);
+        emit Redeemed(id, safe, sub.recipient, sub.lastRedeemed, sub.requireTrusted);
     }
 
     function redeemUntrusted(bytes32 id) external {
@@ -151,7 +151,7 @@ contract SubscriptionModule {
             Errors.ExecutionFailed()
         );
 
-        emit Redeemed(id, safe, sub.recipient, sub.amount, sub.lastRedeemed, sub.frequency, sub.requireTrusted);
+        emit Redeemed(id, safe, sub.recipient, sub.lastRedeemed, sub.requireTrusted);
     }
 
     function unsubscribe(bytes32 id) external {
