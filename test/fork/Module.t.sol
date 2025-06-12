@@ -2,8 +2,9 @@
 pragma solidity >=0.8.28 <0.9.0;
 
 import { Fork_Test } from "./Fork.t.sol";
-
 import { stdJson } from "forge-std/StdJson.sol";
+
+import { Errors } from "src/libs/Errors.sol";
 import { TypeDefinitions } from "@circles/src/hub/TypeDefinitions.sol";
 
 contract Module_Fork_Test is Fork_Test {
@@ -63,5 +64,36 @@ contract Module_Fork_Test is Fork_Test {
 
         assertEq(hub.balanceOf(info.to, uint256(uint160(FROM))), cachedToBal + info.value);
         assertEq(hub.balanceOf(FROM, uint256(uint160(FROM))), cachedFromBal - info.value);
+    }
+
+    function test_ShouldRevert_CannotRedeemAfterUnsubscribed() external {
+        bytes memory rawBlob = json.parseRaw(".1");
+        FlowInfo memory info = abi.decode(rawBlob, (FlowInfo));
+
+        _enableModule();
+
+        resetPrank({ msgSender: FROM });
+        bytes32 id = module.subscribe(info.to, info.value, 3600, false);
+        module.unsubscribe(id);
+
+        resetPrank({ msgSender: info.to });
+        vm.expectRevert(Errors.IdentifierNonexistent.selector);
+        module.redeemUntrusted(id);
+    }
+
+    function test_ShouldRevert_CannotRedeemAgainImmediately() external {
+        bytes memory rawBlob = json.parseRaw(".1");
+        FlowInfo memory info = abi.decode(rawBlob, (FlowInfo));
+
+        _enableModule();
+
+        resetPrank({ msgSender: FROM });
+        bytes32 id = module.subscribe(info.to, info.value, 3600, false);
+
+        resetPrank({ msgSender: info.to });
+        module.redeemUntrusted(id);
+
+        vm.expectRevert(Errors.NotRedeemable.selector);
+        module.redeemUntrusted(id);
     }
 }
