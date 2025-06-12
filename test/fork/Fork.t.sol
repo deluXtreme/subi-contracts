@@ -15,6 +15,7 @@ import { ModuleManager } from "@safe-smart-account/contracts/base/ModuleManager.
 abstract contract Fork_Test is Assertions, Utils {
     SubscriptionModule internal module;
 
+    /// @dev Private key has to be an owner of the `FROM` 1/1 safe
     uint256 internal pk = vm.envUint("PRIVATE_KEY");
 
     address internal constant FROM = 0xeDe0C2E70E8e2d54609c1BdF79595506B6F623FE;
@@ -73,7 +74,7 @@ abstract contract Fork_Test is Assertions, Utils {
             TypeDefinitions.Stream({ sourceCoordinate: s.sourceCoordinate, flowEdgeIds: s.flowEdgeIds, data: s.data });
     }
 
-    function _toTypeInputs(Inputs memory in_)
+    function _toTypeInputs(Inputs memory inputs)
         internal
         pure
         returns (
@@ -84,17 +85,17 @@ abstract contract Fork_Test is Assertions, Utils {
             TypeDefinitions.Stream[] memory streams
         )
     {
-        flowEdges = new TypeDefinitions.FlowEdge[](in_.flow.length);
-        for (uint256 i = 0; i < in_.flow.length; i++) {
-            flowEdges[i] = _toTypeEdge(in_.flow[i]);
+        flowEdges = new TypeDefinitions.FlowEdge[](inputs.flow.length);
+        for (uint256 i = 0; i < inputs.flow.length; i++) {
+            flowEdges[i] = _toTypeEdge(inputs.flow[i]);
         }
-        streams = new TypeDefinitions.Stream[](in_.streams.length);
-        for (uint256 j = 0; j < in_.streams.length; j++) {
-            streams[j] = _toTypeStream(in_.streams[j]);
+        streams = new TypeDefinitions.Stream[](inputs.streams.length);
+        for (uint256 j = 0; j < inputs.streams.length; j++) {
+            streams[j] = _toTypeStream(inputs.streams[j]);
         }
-        flowVertices = in_.flowVertices;
-        packedCoordinates = in_.packedCoordinates;
-        sourceCoordinate = in_.sourceCoordinate;
+        flowVertices = inputs.flowVertices;
+        packedCoordinates = inputs.packedCoordinates;
+        sourceCoordinate = inputs.sourceCoordinate;
     }
 
     function _toTypeFlowInfo(FlowInfo memory info)
