@@ -13,6 +13,8 @@ interface ISafe {
         external
         returns (bool success);
 
+    function getOwners() external view returns (address[] memory);
+
     function enableModule(address module) external;
 
     function nonce() external view returns (uint256);

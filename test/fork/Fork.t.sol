@@ -4,6 +4,8 @@ pragma solidity >=0.8.28 <0.9.0;
 import { SubscriptionModule } from "src/SubscriptionModule.sol";
 import { ISafe } from "src/interfaces/ISafe.sol";
 
+import { Vm } from "forge-std/Vm.sol";
+
 import { Assertions } from "../utils/Assertions.sol";
 import { Utils } from "../utils/Utils.sol";
 
@@ -15,12 +17,13 @@ import { ModuleManager } from "@safe-smart-account/contracts/base/ModuleManager.
 abstract contract Fork_Test is Assertions, Utils {
     SubscriptionModule internal module;
 
-    /// @dev Private key has to be an owner of the `FROM` 1/1 safe
-    uint256 internal pk = vm.envUint("PRIVATE_KEY");
+    bytes32 internal constant SAFE_OWNER_SENTINEL = keccak256(abi.encode(address(1), uint256(2)));
 
     address internal constant FROM = 0xeDe0C2E70E8e2d54609c1BdF79595506B6F623FE;
 
     IHubV2 internal constant hub = IHubV2(0xc12C1E50ABB450d6205Ea2C3Fa861b3B834d13e8);
+
+    Vm.Wallet internal fritz;
 
     /*//////////////////////////////////////////////////////////////
                        ALPHABETICAL-ORDER-STRUCTS
@@ -59,6 +62,11 @@ abstract contract Fork_Test is Assertions, Utils {
         vm.createSelectFork({ blockNumber: 40_531_966, urlOrAlias: "gnosis" });
 
         module = new SubscriptionModule();
+
+        // Make Fritz the owner of the FROM safe
+        fritz = vm.createWallet("fritz's wallet");
+        vm.store(FROM, SAFE_OWNER_SENTINEL, bytes32(uint256(uint160(fritz.addr))));
+        vm.store(FROM, keccak256(abi.encode(fritz.addr, uint256(2))), bytes32(uint256(uint160(address(0x1)))));
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -113,9 +121,9 @@ abstract contract Fork_Test is Assertions, Utils {
     }
 
     function _enableModule() internal {
-        resetPrank({ msgSender: vm.addr(pk) });
+        resetPrank({ msgSender: fritz.addr });
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(
-            pk,
+            fritz.privateKey,
             ISafe(FROM).getTransactionHash(
                 FROM,
                 0,
