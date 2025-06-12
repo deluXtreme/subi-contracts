@@ -39,5 +39,5 @@ jobs:
 
       - name: Run Forge tests
         run: |
-          forge test --no-match-test '(?i)fork' -vvv
+          forge test --no-match-contract '(?i)fork'
         id: test
