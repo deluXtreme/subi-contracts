@@ -18,6 +18,7 @@ contract UpdateRecipient_Unit_Fuzz_Test is Base_Test {
     }
 
     function testFuzz_ShouldRevert_SubscriptionDoesNotExist() external {
+        vm.expectRevert(Errors.OnlyRecipient.selector);
         module.updateRecipient(keccak256(abi.encode("FAKE_SUBSCRIPTION_ID")), address(0x1));
     }
 
