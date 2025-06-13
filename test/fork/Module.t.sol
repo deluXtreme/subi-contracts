@@ -36,14 +36,7 @@ contract Module_Fork_Test is Fork_Test {
         bytes32 id = module.subscribe(info.to, info.value, 3600, true);
 
         resetPrank({ msgSender: info.to });
-        module.redeem(
-            id,
-            info.inputs.flowVertices,
-            flowEdges,
-            streams,
-            info.inputs.packedCoordinates,
-            info.inputs.sourceCoordinate
-        );
+        module.redeem(id, flowVertices, flowEdges, streams, packedCoordinates, sourceCoordinate);
     }
 
     /// @dev Trusted path fails for this scenario, passes with untrusted flow
