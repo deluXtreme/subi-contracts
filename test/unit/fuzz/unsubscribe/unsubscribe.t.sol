@@ -6,6 +6,7 @@ import { stdStorage, StdStorage } from "forge-std/Test.sol";
 
 import { Errors } from "src/libs/Errors.sol";
 import { Subscription } from "src/libs/Types.sol";
+import { SubscriptionModule } from "src/SubscriptionModule.sol";
 
 contract Subscribe_Unit_Fuzz_Test is Base_Test {
     using stdStorage for StdStorage;
@@ -27,6 +28,8 @@ contract Subscribe_Unit_Fuzz_Test is Base_Test {
         vm.assume(subscriber != address(0));
         module.exposed__subscribe(subscriber, id, subscription);
 
+        vm.expectEmit();
+        emit SubscriptionModule.SubscriptionCancelled(id);
         module.exposed__unsubscribe(subscriber, id);
 
         assertEq(module.getSubscription(subscriber, id), defaults.subscriptionEmpty());

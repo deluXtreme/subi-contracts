@@ -55,6 +55,8 @@ contract SubscriptionModule {
         bool requireTrusted
     );
 
+    event SubscriptionCancelled(bytes32 indexed id);
+
     event Redeemed(
         bytes32 indexed id,
         address indexed subscriber,
@@ -201,6 +203,7 @@ contract SubscriptionModule {
         delete _subscriptions[subscriber][id];
         delete safeFromId[id];
         ids[subscriber].remove(id);
+        emit SubscriptionCancelled(id);
     }
 
     /*//////////////////////////////////////////////////////////////
