@@ -33,7 +33,7 @@ contract Subscribe_Unit_Fuzz_Test is Base_Test {
         module.exposed__subscribe(subscriber, id, subscription);
     }
 
-    function testFuzz_Subscribe(
+    function testFuzz_Subscribe_Internal(
         address subscriber,
         bytes32 id,
         Subscription memory subscription
@@ -44,7 +44,7 @@ contract Subscribe_Unit_Fuzz_Test is Base_Test {
         vm.assume(id != bytes32(ZERO_SENTINEL));
         module.exposed__subscribe(subscriber, id, subscription);
 
-        assertEq(module.getSubscription(subscriber, id), subscription);
+        assertEq(module.getSubscription(id), subscription);
         assertEq(module.safeFromId(id), subscriber);
         bytes32[] memory ids = new bytes32[](1);
         ids[0] = id;
@@ -102,7 +102,7 @@ contract Subscribe_Unit_Fuzz_Test is Base_Test {
 
         bytes32 id = module.subscribe(recipient, amount, frequency, requireTrusted);
 
-        assertEq(module.getSubscription(users.subscriber, id), sub);
+        assertEq(module.getSubscription(id), sub);
         assertEq(module.safeFromId(id), users.subscriber);
         bytes32[] memory ids = new bytes32[](1);
         ids[0] = id;
