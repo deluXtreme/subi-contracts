@@ -25,4 +25,6 @@ library Errors {
     error TrustedPathOnly();
 
     error OnlyRecipient();
+
+    error OnlySubscriber();
 }
