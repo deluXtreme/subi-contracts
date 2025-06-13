@@ -95,7 +95,6 @@ contract Subscribe_Unit_Fuzz_Test is Base_Test {
             users.subscriber,
             recipient,
             amount,
-            vm.getBlockTimestamp() - frequency,
             frequency,
             requireTrusted
         );

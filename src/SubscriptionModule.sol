@@ -50,18 +50,11 @@ contract SubscriptionModule {
         address indexed subscriber,
         address indexed recipient,
         uint256 amount,
-        uint256 lastRedeemed,
         uint256 frequency,
         bool requireTrusted
     );
 
-    event Redeemed(
-        bytes32 indexed id,
-        address indexed subscriber,
-        address indexed recipient,
-        uint256 lastRedeemed,
-        bool requireTrusted
-    );
+    event Redeemed(bytes32 indexed id, address indexed subscriber, address indexed recipient);
 
     event RecipientUpdated(bytes32 indexed id, address indexed oldRecipient, address indexed newRecipient);
 
@@ -89,9 +82,7 @@ contract SubscriptionModule {
         });
         id = sub.compute();
         _subscribe(msg.sender, id, sub);
-        emit SubscriptionCreated(
-            id, msg.sender, recipient, amount, block.timestamp - frequency, frequency, requireTrusted
-        );
+        emit SubscriptionCreated(id, msg.sender, recipient, amount, frequency, requireTrusted);
     }
 
     function redeem(
@@ -128,7 +119,7 @@ contract SubscriptionModule {
             Errors.ExecutionFailed()
         );
 
-        emit Redeemed(id, safe, sub.recipient, sub.lastRedeemed, sub.requireTrusted);
+        emit Redeemed(id, safe, sub.recipient);
     }
 
     function redeemUntrusted(bytes32 id) external {
@@ -153,7 +144,7 @@ contract SubscriptionModule {
             Errors.ExecutionFailed()
         );
 
-        emit Redeemed(id, safe, sub.recipient, sub.lastRedeemed, sub.requireTrusted);
+        emit Redeemed(id, safe, sub.recipient);
     }
 
     function unsubscribe(bytes32 id) external {
