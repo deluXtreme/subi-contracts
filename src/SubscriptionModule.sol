@@ -65,6 +65,8 @@ contract SubscriptionModule {
 
     event RecipientUpdated(bytes32 indexed id, address indexed oldRecipient, address indexed newRecipient);
 
+    event Unsubscribed(bytes32 indexed id, address indexed subscriber);
+
     /*//////////////////////////////////////////////////////////////
                    USER-FACING NON-CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////*/
@@ -211,6 +213,7 @@ contract SubscriptionModule {
         delete _subscriptions[subscriber][id];
         delete safeFromId[id];
         ids[subscriber].remove(id);
+        emit Unsubscribed(id, subscriber);
     }
 
     /*//////////////////////////////////////////////////////////////
