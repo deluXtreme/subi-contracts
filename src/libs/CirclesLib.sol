@@ -13,8 +13,8 @@ library CirclesLib {
     /// @param start The starting index (inclusive) of the slice.
     /// @param end   The ending index (exclusive) of the slice.
     /// @return result The integer value of the slice.
-    function slice(bytes calldata data, uint256 start, uint256 end) internal pure returns (uint256 result) {
-        bytes calldata window = data.sliceCalldata(start, end);
+    function slice(bytes memory data, uint256 start, uint256 end) internal pure returns (uint256 result) {
+        bytes memory window = data.slice(start, end);
         for (uint256 i = 0; i < window.length; i++) {
             result = (result << 8) | uint8(window[i]);
         }
@@ -27,10 +27,10 @@ library CirclesLib {
     /// @param coordinates Packed coordinates for this stream.
     /// @return success True if every extracted to address equals `recipient`, otherwise false.
     function checkRecipients(
-        TypeDefinitions.Stream[] calldata streams,
+        TypeDefinitions.Stream[] memory streams,
         address recipient,
-        address[] calldata flowVertices,
-        bytes calldata coordinates
+        address[] memory flowVertices,
+        bytes memory coordinates
     )
         internal
         pure
@@ -47,7 +47,7 @@ library CirclesLib {
     }
 
     function checkSource(
-        TypeDefinitions.Stream[] calldata streams,
+        TypeDefinitions.Stream[] memory streams,
         uint256 sourceCoordinate
     )
         internal
@@ -63,7 +63,7 @@ library CirclesLib {
     /// @notice Sum all flow amount entries where stream sink ID is 1.
     /// @param flow An array of FlowEdge structs.
     /// @return amount The total of all `amount` fields whose `streamSinkId` equals 1.
-    function extractAmount(TypeDefinitions.FlowEdge[] calldata flow) internal pure returns (uint256 amount) {
+    function extractAmount(TypeDefinitions.FlowEdge[] memory flow) internal pure returns (uint256 amount) {
         for (uint256 i = 0; i < flow.length; i++) {
             if (flow[i].streamSinkId == 1) {
                 amount += flow[i].amount;
