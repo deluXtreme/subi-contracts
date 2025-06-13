@@ -1,0 +1,22 @@
+subscribe.t.sol
+
+internal
+├── given the identifier already exists
+│   └── it should revert
+└── given the identifier does not exist
+    ├── it should store the subscription under the subscriber and id
+    ├── it should map the id to the subscriber
+    └── it should add the id into the subscriber’s id‐set
+
+user-facing
+├── when frequency is zero
+│   └── it should revert
+└── when frequency is greater than zero
+    ├── given the identifier already exists
+    │   └── it should revert
+    └── given the identifier does not exist
+        ├── it should return the subscription id
+        ├── it should store the subscription under the subscriber and id
+        ├── it should map the id to the call
+        ├── it should add the id into the caller's id-set
+        └── it should emit a {SubscriptionCreated} event

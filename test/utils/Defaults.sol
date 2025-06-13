@@ -64,4 +64,15 @@ contract Defaults is Constants {
             requireTrusted: false
         });
     }
+
+    function subscriptionEmpty() public pure returns (Subscription memory) {
+        return Subscription({
+            subscriber: address(0),
+            recipient: address(0),
+            amount: 0,
+            lastRedeemed: 0,
+            frequency: 0,
+            requireTrusted: false
+        });
+    }
 }

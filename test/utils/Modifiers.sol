@@ -22,4 +22,21 @@ abstract contract Modifiers is Constants, Utils {
         defaults = _defaults;
         users = _users;
     }
+
+    modifier givenIdentifierNotExists() {
+        _;
+    }
+
+    modifier givenIdentifierExists() {
+        _;
+    }
+
+    modifier whenFrequencyGtZero() {
+        _;
+    }
+
+    modifier whenCallerSubscriber() {
+        resetPrank({ msgSender: users.subscriber });
+        _;
+    }
 }
