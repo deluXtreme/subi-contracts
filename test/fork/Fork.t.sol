@@ -17,7 +17,11 @@ import { ModuleManager } from "@safe-smart-account/contracts/base/ModuleManager.
 abstract contract Fork_Test is Assertions, Utils {
     SubscriptionModule internal module;
 
-    bytes32 internal constant SAFE_OWNER_SENTINEL = keccak256(abi.encode(address(1), uint256(2)));
+    uint256 internal constant SAFE_OWNERS_SLOT = 2;
+
+    address internal constant SENTINEL_OWNERS = address(0x1);
+
+    bytes32 internal constant SAFE_SENTINEL_OWNERS_SLOT = keccak256(abi.encode(SENTINEL_OWNERS, SAFE_OWNERS_SLOT));
 
     address internal constant FROM = 0xeDe0C2E70E8e2d54609c1BdF79595506B6F623FE;
 
@@ -65,13 +69,17 @@ abstract contract Fork_Test is Assertions, Utils {
 
         // Make Fritz the owner of the FROM safe
         fritz = vm.createWallet("fritz's wallet");
-        vm.store(FROM, SAFE_OWNER_SENTINEL, bytes32(uint256(uint160(fritz.addr))));
-        vm.store(FROM, keccak256(abi.encode(fritz.addr, uint256(2))), bytes32(uint256(uint160(address(0x1)))));
+        vm.store(FROM, SAFE_SENTINEL_OWNERS_SLOT, _addressToBytes32(fritz.addr));
+        vm.store(FROM, keccak256(abi.encode(fritz.addr, SAFE_OWNERS_SLOT)), _addressToBytes32(SENTINEL_OWNERS));
     }
 
     /*//////////////////////////////////////////////////////////////
                                 HELPERS
     //////////////////////////////////////////////////////////////*/
+
+    function _addressToBytes32(address addr) internal pure returns (bytes32) {
+        return bytes32(uint256(uint160(addr)));
+    }
 
     function _toTypeEdge(FlowEdge memory e) internal pure returns (TypeDefinitions.FlowEdge memory) {
         return TypeDefinitions.FlowEdge({ streamSinkId: e.streamSinkId, amount: e.amount });
