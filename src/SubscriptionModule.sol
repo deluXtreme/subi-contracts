@@ -63,6 +63,8 @@ contract SubscriptionModule {
         bool requireTrusted
     );
 
+    event RecipientUpdated(bytes32 indexed id, address indexed oldRecipient, address indexed newRecipient);
+
     /*//////////////////////////////////////////////////////////////
                    USER-FACING NON-CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////*/
@@ -162,6 +164,14 @@ contract SubscriptionModule {
         for (uint256 i; i < _ids.length; ++i) {
             _unsubscribe(msg.sender, _ids[i]);
         }
+    }
+
+    function updateRecipient(bytes32 id, address newRecipient) external {
+        address safe = safeFromId[id];
+        Subscription storage sub = _subscriptions[safe][id];
+        require(sub.recipient == msg.sender, Errors.OnlyRecipient());
+        sub.recipient = newRecipient;
+        emit RecipientUpdated(id, msg.sender, newRecipient);
     }
 
     /*//////////////////////////////////////////////////////////////

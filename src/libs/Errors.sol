@@ -23,4 +23,6 @@ library Errors {
     error SingleStreamOnly();
 
     error TrustedPathOnly();
+
+    error OnlyRecipient();
 }
