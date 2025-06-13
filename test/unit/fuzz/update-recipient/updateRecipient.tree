@@ -1,0 +1,6 @@
+updateRecipient.t.sol
+├── given the caller is not the subscription recipient
+│   └── it should revert
+└── given the caller is subscription recipient
+    ├── it should update the recipient
+    └── it should emit a {RecipientUpdated} event

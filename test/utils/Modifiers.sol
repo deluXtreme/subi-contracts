@@ -39,4 +39,9 @@ abstract contract Modifiers is Constants, Utils {
         resetPrank({ msgSender: users.subscriber });
         _;
     }
+
+    modifier whenCallerRecipient() {
+        resetPrank({ msgSender: users.recipient });
+        _;
+    }
 }

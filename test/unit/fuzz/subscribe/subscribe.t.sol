@@ -33,7 +33,7 @@ contract Subscribe_Unit_Fuzz_Test is Base_Test {
         module.exposed__subscribe(subscriber, id, subscription);
     }
 
-    function testFuzz_Subscribe(
+    function testFuzz_Subscribe_Internal(
         address subscriber,
         bytes32 id,
         Subscription memory subscription
