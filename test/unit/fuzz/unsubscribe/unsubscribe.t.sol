@@ -29,7 +29,7 @@ contract Subscribe_Unit_Fuzz_Test is Base_Test {
 
         module.exposed__unsubscribe(subscriber, id);
 
-        assertEq(module.getSubscription(subscriber, id), defaults.subscriptionEmpty());
+        assertEq(module.getSubscription(id), defaults.subscriptionEmpty());
         assertEq(module.safeFromId(id), address(0));
         bytes32[] memory ids;
         assertEq(module.getSubscriptionIds(subscriber), ids);

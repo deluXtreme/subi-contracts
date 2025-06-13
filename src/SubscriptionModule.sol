@@ -168,8 +168,8 @@ contract SubscriptionModule {
                      USER-FACING CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    function getSubscription(address safe, bytes32 id) external view returns (Subscription memory) {
-        return _subscriptions[safe][id];
+    function getSubscription(bytes32 id) external view returns (Subscription memory) {
+        return _subscriptions[safeFromId[id]][id];
     }
 
     function getSubscriptionIds(address safe) external view returns (bytes32[] memory) {
