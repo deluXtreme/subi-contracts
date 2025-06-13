@@ -4,6 +4,7 @@ pragma solidity >=0.8.28 <0.9.0;
 import { Base_Test } from "test/Base.t.sol";
 import { stdStorage, StdStorage } from "forge-std/Test.sol";
 
+import { SubscriptionModule } from "src/SubscriptionModule.sol";
 import { Errors } from "src/libs/Errors.sol";
 import { Subscription } from "src/libs/Types.sol";
 
@@ -31,6 +32,9 @@ contract Subscribe_Unit_Fuzz_Test is Base_Test {
         vm.assume(subscriber != address(0));
         module.exposed__subscribe(subscriber, id, subscription);
 
+        vm.expectEmit();
+        emit SubscriptionModule.Unsubscribed(id, subscriber);
+
         module.exposed__unsubscribe(subscriber, id);
 
         assertEq(module.getSubscription(id), defaults.subscriptionEmpty());
@@ -57,6 +61,11 @@ contract Subscribe_Unit_Fuzz_Test is Base_Test {
             vars[i].frequency = bound(vars[i].frequency, 1, SECONDS_PER_YEAR);
             Vars memory v = vars[i];
             ids[i] = module.subscribe(v.recipient, v.amount, v.frequency, v.requireTrusted);
+        }
+
+        for (uint256 i; i < 3; ++i) {
+            vm.expectEmit();
+            emit SubscriptionModule.Unsubscribed(ids[i], users.subscriber);
         }
 
         module.unsubscribeMany(ids);
