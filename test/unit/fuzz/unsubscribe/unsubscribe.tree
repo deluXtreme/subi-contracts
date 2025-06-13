@@ -1,1 +1,17 @@
 unsubscribe.t.sol
+
+internal
+├── given the identifier does not exist
+│   └── it should revert
+└── given the identifier does exist
+    ├── it should delete the subscription for the subscriber
+    ├── it should delete the mapping between subscription id and subscriber
+    └── it should remove the id from the subscriber's id-set
+
+user-facing
+├── given the identifier does not exist
+│   └── it should revert
+└── given the identifier does exist
+    ├── it should delete the subscription for the caller
+    ├── it should delete the mapping between the subscription id and caller
+    └── it should remove the id from the caller's id-set
