@@ -142,7 +142,7 @@ contract SubscriptionModule {
                      USER-FACING CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    function getSubscription(bytes32 id) external returns (Subscription memory) {
+    function getSubscription(bytes32 id) external view returns (Subscription memory) {
         return _subscriptions[id];
     }
 
@@ -153,7 +153,7 @@ contract SubscriptionModule {
     function isValidOrRedeemable(bytes32 id) public view returns (uint256) {
         Subscription memory sub = _subscriptions[id];
         if (!_exists(sub)) return 0;
-        return (block.timestamp - subscription.lastRedeemed) / subscription.frequency * subscription.amount;
+        return (block.timestamp - sub.lastRedeemed) / sub.frequency * sub.amount;
     }
 
     /*//////////////////////////////////////////////////////////////
