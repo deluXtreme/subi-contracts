@@ -24,13 +24,8 @@ contract Module_Fork_Test is Fork_Test {
 
         _enableModule();
 
-        (
-            TypeDefinitions.FlowEdge[] memory flowEdges,
-            address[] memory flowVertices,
-            bytes memory packedCoordinates,
-            uint256 sourceCoordinate,
-            TypeDefinitions.Stream[] memory streams
-        ) = _toTypeFlowInfo(info);
+        (TypeDefinitions.FlowEdge[] memory flowEdges,,,, TypeDefinitions.Stream[] memory streams) =
+            _toTypeFlowInfo(info);
 
         resetPrank({ msgSender: FROM });
         bytes32 id = module.subscribe(info.to, info.value, 3600, true);
