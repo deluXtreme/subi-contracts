@@ -188,15 +188,33 @@ contract SubscriptionModule {
         uint256[] memory amounts = new uint256[](1);
         amounts[0] = sub.amount;
 
+        /**
+         * Steps required to handle group minting for the subscriber
+         *   - pull subscriber CRC tokens
+         *   - mint group (= recipient) tokens to this module using subscriber CRC collateral
+         *     - empty data for now, @todo check group mint policies for requirements
+         *   - transfer minted group tokens to the subscriber
+         */
         bytes memory call0 = abi.encodeCall(
             ERC1155.safeTransferFrom,
-            (sub.subscriber, address(this), uint256(uint160(sub.subscriber)), periods * sub.amount, "")
+            (sub.subscriber, address(this), _toTokenId(sub.subscriber), periods * sub.amount, "")
         );
         /// @todo empty data for now -- checkout mint policies of existing groups for data requirements
         bytes memory call1 = abi.encodeCall(IHubV2.groupMint, (sub.recipient, collateralAvatars, amounts, ""));
+        bytes memory call2 = abi.encodeCall(
+            ERC1155.safeTransferFrom,
+            (
+                address(this),
+                sub.subscriber,
+                _toTokenId(sub.recipient),
+                ERC1155(HUB).balanceOf(address(this), _toTokenId(sub.recipient)),
+                ""
+            )
+        );
         bytes memory transactions = bytes.concat(
             abi.encodePacked(uint8(0), HUB, uint256(0), call0.length, call0),
-            abi.encodePacked(uint8(0), HUB, uint256(0), call1.length, call1)
+            abi.encodePacked(uint8(0), HUB, uint256(0), call1.length, call1),
+            abi.encodePacked(uint8(0), HUB, uint256(0), call2.length, call2)
         );
 
         require(
@@ -261,7 +279,7 @@ contract SubscriptionModule {
                 0,
                 abi.encodeCall(
                     ERC1155.safeTransferFrom,
-                    (sub.subscriber, sub.recipient, uint256(uint160(sub.subscriber)), periods * sub.amount, "")
+                    (sub.subscriber, sub.recipient, _toTokenId(sub.subscriber), periods * sub.amount, "")
                 ),
                 Enum.Operation.Call
             ),
@@ -292,5 +310,9 @@ contract SubscriptionModule {
     function _applyRedemption(bytes32 id, Subscription memory sub, uint256 periods) internal {
         sub.lastRedeemed += periods * sub.frequency;
         _subscriptions[id] = sub;
+    }
+
+    function _toTokenId(address _avatar) internal pure returns (uint256) {
+        return uint256(uint160(_avatar));
     }
 }
