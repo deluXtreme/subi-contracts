@@ -54,7 +54,7 @@ contract SubscriptionModule {
         bool requireTrusted
     );
 
-    event Redeemed(bytes32 indexed id, address indexed subscriber, address indexed recipient);
+    event Redeemed(bytes32 indexed id, address indexed subscriber, address indexed recipient, uint256 nextRedeemAt);
 
     event RecipientUpdated(bytes32 indexed id, address indexed oldRecipient, address indexed newRecipient);
 
@@ -119,7 +119,7 @@ contract SubscriptionModule {
             Errors.ExecutionFailed()
         );
 
-        emit Redeemed(id, safe, sub.recipient);
+        emit Redeemed(id, safe, sub.recipient, block.timestamp + sub.frequency);
     }
 
     function redeemUntrusted(bytes32 id) external {
@@ -144,7 +144,7 @@ contract SubscriptionModule {
             Errors.ExecutionFailed()
         );
 
-        emit Redeemed(id, safe, sub.recipient);
+        emit Redeemed(id, safe, sub.recipient, block.timestamp + sub.frequency);
     }
 
     function unsubscribe(bytes32 id) external {
