@@ -6,6 +6,7 @@ import { stdJson } from "forge-std/StdJson.sol";
 
 import { Errors } from "src/libs/Errors.sol";
 import { TypeDefinitions } from "@circles/src/hub/TypeDefinitions.sol";
+import { SubscriptionModule } from "src/SubscriptionModule.sol";
 
 contract Module_Fork_Test is Fork_Test {
     using stdJson for string;
@@ -19,6 +20,7 @@ contract Module_Fork_Test is Fork_Test {
     }
 
     function test_Scenario_0() external {
+        uint256 frequency = 3600;
         bytes memory rawBlob = json.parseRaw(".0");
         FlowInfo memory info = abi.decode(rawBlob, (FlowInfo));
 
@@ -33,9 +35,11 @@ contract Module_Fork_Test is Fork_Test {
         ) = _toTypeFlowInfo(info);
 
         resetPrank({ msgSender: FROM });
-        bytes32 id = module.subscribe(info.to, info.value, 3600, true);
+        bytes32 id = module.subscribe(info.to, info.value, frequency, true);
 
         resetPrank({ msgSender: info.to });
+        vm.expectEmit();
+        emit SubscriptionModule.Redeemed(id, FROM, info.to, block.timestamp + frequency);
         module.redeem(
             id,
             info.inputs.flowVertices,
