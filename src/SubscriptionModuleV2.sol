@@ -139,6 +139,24 @@ contract SubscriptionModule {
     }
 
     /*//////////////////////////////////////////////////////////////
+                     USER-FACING CONSTANT FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+
+    function getSubscription(bytes32 id) external returns (Subscription memory) {
+        return _subscriptions[id];
+    }
+
+    function getSubscriptionIds(address subscriber) external view returns (bytes32[] memory) {
+        return ids[subscriber].values();
+    }
+
+    function isValidOrRedeemable(bytes32 id) public view returns (uint256) {
+        Subscription memory sub = _subscriptions[id];
+        if (!_exists(sub)) return 0;
+        return (block.timestamp - subscription.lastRedeemed) / subscription.frequency * subscription.amount;
+    }
+
+    /*//////////////////////////////////////////////////////////////
                     INTERNAL NON-CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
@@ -155,6 +173,40 @@ contract SubscriptionModule {
         delete _subscriptions[id];
         ids[sub.subscriber].remove(id);
         emit Unsubscribed(id, sub.subscriber);
+    }
+
+    function _redeemGroup(bytes32 id) internal {
+        Subscription memory sub = _loadSubscription(id);
+
+        uint256 periods = _requireRedeemablePeriods(sub);
+
+        _applyRedemption(id, sub, periods);
+
+        address[] memory collateralAvatars = new address[](1);
+        collateralAvatars[0] = sub.subscriber;
+
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = sub.amount;
+
+        bytes memory call0 = abi.encodeCall(
+            ERC1155.safeTransferFrom,
+            (sub.subscriber, address(this), uint256(uint160(sub.subscriber)), periods * sub.amount, "")
+        );
+        /// @todo empty data for now -- checkout mint policies of existing groups for data requirements
+        bytes memory call1 = abi.encodeCall(IHubV2.groupMint, (sub.recipient, collateralAvatars, amounts, ""));
+        bytes memory transactions = bytes.concat(
+            abi.encodePacked(uint8(0), HUB, uint256(0), call0.length, call0),
+            abi.encodePacked(uint8(0), HUB, uint256(0), call1.length, call1)
+        );
+
+        require(
+            ISafe(sub.subscriber).execTransactionFromModule(
+                MULTISEND, 0, abi.encodeCall(IMultiSend.multiSend, (transactions)), Enum.Operation.DelegateCall
+            ),
+            Errors.ExecutionFailed()
+        );
+
+        emit Redeemed(id, sub.subscriber, sub.recipient, sub.lastRedeemed, sub.requireTrusted);
     }
 
     function _redeemTrusted(
@@ -187,40 +239,6 @@ contract SubscriptionModule {
                 0,
                 abi.encodeCall(IHubV2.operateFlowMatrix, (flowVertices, flow, streams, packedCoordinates)),
                 Enum.Operation.Call
-            ),
-            Errors.ExecutionFailed()
-        );
-
-        emit Redeemed(id, sub.subscriber, sub.recipient, sub.lastRedeemed, sub.requireTrusted);
-    }
-
-    function _redeemGroup(bytes32 id) internal {
-        Subscription memory sub = _loadSubscription(id);
-
-        uint256 periods = _requireRedeemablePeriods(sub);
-
-        _applyRedemption(id, sub, periods);
-
-        address[] memory collateralAvatars = new address[](1);
-        collateralAvatars[0] = sub.subscriber;
-
-        uint256[] memory amounts = new uint256[](1);
-        amounts[0] = sub.amount;
-
-        bytes memory call0 = abi.encodeCall(
-            ERC1155.safeTransferFrom,
-            (sub.subscriber, address(this), uint256(uint160(sub.subscriber)), periods * sub.amount, "")
-        );
-        /// @todo empty data for now
-        bytes memory call1 = abi.encodeCall(IHubV2.groupMint, (sub.recipient, collateralAvatars, amounts, ""));
-        bytes memory transactions = bytes.concat(
-            abi.encodePacked(uint8(0), HUB, uint256(0), call0.length, call0),
-            abi.encodePacked(uint8(0), HUB, uint256(0), call1.length, call1)
-        );
-
-        require(
-            ISafe(sub.subscriber).execTransactionFromModule(
-                MULTISEND, 0, abi.encodeCall(IMultiSend.multiSend, (transactions)), Enum.Operation.DelegateCall
             ),
             Errors.ExecutionFailed()
         );
