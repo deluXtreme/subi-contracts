@@ -60,6 +60,29 @@ contract Module_Fork_Test is Fork_Test {
         assertEq(hub.balanceOf(FROM, uint256(uint160(FROM))), cachedFromBal - info.value);
     }
 
+    function test_Scenario_1_MultiplePeriods() external {
+        uint256 numPeriods = 3;
+
+        bytes memory rawBlob = json.parseRaw(".1");
+        FlowInfo memory info = abi.decode(rawBlob, (FlowInfo));
+
+        _enableModule();
+
+        resetPrank({ msgSender: FROM });
+        bytes32 id = module.subscribe(info.to, info.value, 3600, false);
+
+        uint256 cachedToBal = hub.balanceOf(info.to, uint256(uint160(FROM)));
+        uint256 cachedFromBal = hub.balanceOf(FROM, uint256(uint160(FROM)));
+
+        vm.warp(vm.getBlockTimestamp() + 3600 * (numPeriods - 1));
+
+        resetPrank({ msgSender: info.to });
+        module.redeem(id, "");
+
+        assertEq(hub.balanceOf(info.to, uint256(uint160(FROM))), cachedToBal + numPeriods * info.value);
+        assertEq(hub.balanceOf(FROM, uint256(uint160(FROM))), cachedFromBal - numPeriods * info.value);
+    }
+
     function test_ShouldRevert_CannotRedeemAfterUnsubscribed() external {
         bytes memory rawBlob = json.parseRaw(".1");
         FlowInfo memory info = abi.decode(rawBlob, (FlowInfo));

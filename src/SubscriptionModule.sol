@@ -13,6 +13,7 @@ import { ERC1155 } from "@circles/src/circles/ERC1155.sol";
 import { TypeDefinitions } from "@circles/src/hub/TypeDefinitions.sol";
 import { Enum } from "@safe-smart-account/contracts/common/Enum.sol";
 import { EnumerableSetLib } from "@solady/src/utils/EnumerableSetLib.sol";
+import { LibTransient } from "@solady/src/utils/LibTransient.sol";
 
 contract SubscriptionModule {
     /*//////////////////////////////////////////////////////////////
@@ -27,6 +28,8 @@ contract SubscriptionModule {
 
     using CirclesLib for TypeDefinitions.Stream[];
 
+    using LibTransient for *;
+
     /*//////////////////////////////////////////////////////////////
                             STATE VARIABLES
     //////////////////////////////////////////////////////////////*/
@@ -39,6 +42,8 @@ contract SubscriptionModule {
     address public constant MULTISEND = 0x38869bf66a61cF6bDB996A6aE40D5853Fd43B526;
 
     bytes32 internal constant NULL_SUBSCRIPTION = 0x868e09d528a16744c1f38ea3c10cc2251e01a456434f91172247695087d129b7;
+
+    bytes32 internal constant T_REDEEMABLE_AMOUNT = 0x70bfbb43a5ce660914e09d1b48fcc488982d5981137b973eac35b0592a414e90;
 
     mapping(bytes32 id => Subscription subscription) internal _subscriptions;
 
@@ -101,9 +106,17 @@ contract SubscriptionModule {
 
     function redeem(bytes32 id, bytes calldata data) external {
         Subscription memory sub = _subscriptions[id];
+        require(sub.subscriber != address(0), Errors.IdentifierNonexistent());
+
+        uint256 periods = (block.timestamp - sub.lastRedeemed) / sub.frequency;
+        require(periods >= 1, Errors.NotRedeemable());
+
+        LibTransient.tUint256(T_REDEEMABLE_AMOUNT).set(periods * sub.amount);
+        sub.lastRedeemed += periods * sub.frequency;
+        _subscriptions[id] = sub;
 
         if (IHubV2(HUB).isGroup(sub.recipient)) {
-            _redeemGroup(id);
+            _redeemGroup(id, sub);
             return;
         }
 
@@ -115,9 +128,9 @@ contract SubscriptionModule {
                 bytes memory packedCoordinates,
                 uint256 sourceCoordinate
             ) = abi.decode(data, (address[], TypeDefinitions.FlowEdge[], TypeDefinitions.Stream[], bytes, uint256));
-            _redeemTrusted(id, flowVertices, flow, streams, packedCoordinates, sourceCoordinate);
+            _redeemTrusted(id, sub, flowVertices, flow, streams, packedCoordinates, sourceCoordinate);
         } else {
-            _redeemUntrusted(id);
+            _redeemUntrusted(id, sub);
         }
     }
 
@@ -151,7 +164,7 @@ contract SubscriptionModule {
     }
 
     function isValidOrRedeemable(bytes32 id) public view returns (uint256) {
-        if (!_exists(id)) return 0;
+        if (_subscriptions[id].subscriber == address(0)) return 0;
         Subscription memory sub = _subscriptions[id];
         return (block.timestamp - sub.lastRedeemed) / sub.frequency * sub.amount;
     }
@@ -161,27 +174,21 @@ contract SubscriptionModule {
     //////////////////////////////////////////////////////////////*/
 
     function _subscribe(bytes32 id, Subscription memory sub) internal {
-        require(!_exists(id), Errors.IdentifierExists());
+        require(_subscriptions[id].subscriber == address(0), Errors.IdentifierExists());
         _subscriptions[id] = sub;
         ids[sub.subscriber].add(id);
     }
 
     function _unsubscribe(address caller, bytes32 id) internal {
-        require(_exists(id), Errors.IdentifierNonexistent());
         Subscription memory sub = _subscriptions[id];
+        require(sub.subscriber != address(0), Errors.IdentifierNonexistent());
         require(sub.subscriber == caller, Errors.OnlySubscriber());
         delete _subscriptions[id];
         ids[sub.subscriber].remove(id);
         emit Unsubscribed(id, sub.subscriber);
     }
 
-    function _redeemGroup(bytes32 id) internal {
-        Subscription memory sub = _loadSubscription(id);
-
-        uint256 periods = _requireRedeemablePeriods(sub);
-
-        _applyRedemption(id, sub, periods);
-
+    function _redeemGroup(bytes32 id, Subscription memory sub) internal {
         address[] memory collateralAvatars = new address[](1);
         collateralAvatars[0] = sub.subscriber;
 
@@ -197,7 +204,13 @@ contract SubscriptionModule {
          */
         bytes memory call0 = abi.encodeCall(
             ERC1155.safeTransferFrom,
-            (sub.subscriber, address(this), _toTokenId(sub.subscriber), periods * sub.amount, "")
+            (
+                sub.subscriber,
+                address(this),
+                _toTokenId(sub.subscriber),
+                LibTransient.tUint256(T_REDEEMABLE_AMOUNT).get(),
+                ""
+            )
         );
         /// @todo empty data for now -- checkout mint policies of existing groups for data requirements
         bytes memory call1 = abi.encodeCall(IHubV2.groupMint, (sub.recipient, collateralAvatars, amounts, ""));
@@ -225,10 +238,12 @@ contract SubscriptionModule {
         );
 
         emit Redeemed(id, sub.subscriber, sub.recipient, sub.lastRedeemed, sub.requireTrusted);
+        LibTransient.tUint256(T_REDEEMABLE_AMOUNT).clear();
     }
 
     function _redeemTrusted(
         bytes32 id,
+        Subscription memory sub,
         address[] memory flowVertices,
         TypeDefinitions.FlowEdge[] memory flow,
         TypeDefinitions.Stream[] memory streams,
@@ -237,19 +252,13 @@ contract SubscriptionModule {
     )
         internal
     {
-        Subscription memory sub = _loadSubscription(id);
-
-        uint256 periods = _requireRedeemablePeriods(sub);
-
         require(flowVertices[sourceCoordinate] == sub.subscriber, Errors.InvalidSubscriber());
 
         require(streams.checkSource(sourceCoordinate), Errors.InvalidStreamSource());
 
         require(streams.checkRecipients(sub.recipient, flowVertices, packedCoordinates), Errors.InvalidRecipient());
 
-        require(flow.extractAmount() == periods * sub.amount, Errors.InvalidAmount());
-
-        _applyRedemption(id, sub, periods);
+        require(flow.extractAmount() == LibTransient.tUint256(T_REDEEMABLE_AMOUNT).get(), Errors.InvalidAmount());
 
         require(
             ISafe(sub.subscriber).execTransactionFromModule(
@@ -262,16 +271,11 @@ contract SubscriptionModule {
         );
 
         emit Redeemed(id, sub.subscriber, sub.recipient, sub.lastRedeemed, sub.requireTrusted);
+        LibTransient.tUint256(T_REDEEMABLE_AMOUNT).clear();
     }
 
-    function _redeemUntrusted(bytes32 id) internal {
-        Subscription memory sub = _loadSubscription(id);
-
+    function _redeemUntrusted(bytes32 id, Subscription memory sub) internal {
         require(!sub.requireTrusted, Errors.TrustedPathOnly());
-
-        uint256 periods = _requireRedeemablePeriods(sub);
-
-        _applyRedemption(id, sub, periods);
 
         require(
             ISafe(sub.subscriber).execTransactionFromModule(
@@ -279,7 +283,13 @@ contract SubscriptionModule {
                 0,
                 abi.encodeCall(
                     ERC1155.safeTransferFrom,
-                    (sub.subscriber, sub.recipient, _toTokenId(sub.subscriber), periods * sub.amount, "")
+                    (
+                        sub.subscriber,
+                        sub.recipient,
+                        _toTokenId(sub.subscriber),
+                        LibTransient.tUint256(T_REDEEMABLE_AMOUNT).get(),
+                        ""
+                    )
                 ),
                 Enum.Operation.Call
             ),
@@ -287,32 +297,12 @@ contract SubscriptionModule {
         );
 
         emit Redeemed(id, sub.subscriber, sub.recipient, sub.lastRedeemed, sub.requireTrusted);
+        LibTransient.tUint256(T_REDEEMABLE_AMOUNT).clear();
     }
 
     /*//////////////////////////////////////////////////////////////
                       INTERNAL CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////*/
-
-    function _exists(bytes32 id) internal view returns (bool) {
-        return _subscriptions[id].subscriber != address(0);
-    }
-
-    function _loadSubscription(bytes32 id) internal view returns (Subscription memory sub) {
-        sub = _subscriptions[id];
-        require(_exists(id), Errors.IdentifierNonexistent());
-    }
-
-    function _requireRedeemablePeriods(Subscription memory sub) internal view returns (uint256 periods) {
-        periods = (block.timestamp - sub.lastRedeemed) / sub.frequency;
-        require(periods >= 1, Errors.NotRedeemable());
-    }
-
-    function _applyRedemption(bytes32 id, Subscription memory sub, uint256 periods) internal {
-        sub.lastRedeemed += periods * sub.frequency;
-        _subscriptions[id] = sub;
-    }
-
-    // function _applyRedemptionV2(Subscription storage sub, uint256 periods) internal { }
 
     function _toTokenId(address _avatar) internal pure returns (uint256) {
         return uint256(uint160(_avatar));

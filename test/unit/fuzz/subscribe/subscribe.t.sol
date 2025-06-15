@@ -30,14 +30,7 @@ contract Subscribe_Unit_Fuzz_Test is Base_Test {
         module.exposed__subscribe(id, sub);
     }
 
-    function testFuzz_Subscribe_Internal(
-        address subscriber,
-        bytes32 id,
-        Subscription memory sub
-    )
-        external
-        givenIdentifierNotExists
-    {
+    function testFuzz_Subscribe_Internal(bytes32 id, Subscription memory sub) external givenIdentifierNotExists {
         vm.assume(id != bytes32(ZERO_SENTINEL));
         module.exposed__subscribe(id, sub);
 
