@@ -15,9 +15,27 @@ contract Subscribe_Unit_Fuzz_Test is Base_Test {
                                 INTERNAL
     //////////////////////////////////////////////////////////////*/
 
-    function testFuzz_ShouldRevert_IdentifierNonexistent(address subscriber, bytes32 id) external {
-        vm.expectRevert(Errors.IdentifierNonexistent.selector);
+    function testFuzz_ShouldRevert_WhenSubscriptionMissing(address subscriber, bytes32 id) external {
+        vm.assume(subscriber != address(0));
+        vm.expectRevert(Errors.OnlySubscriber.selector);
         module.exposed__unsubscribe(subscriber, id);
+    }
+
+    function testFuzz_ShouldRevert_WhenCallerNotSubscriber(
+        address caller,
+        bytes32 id,
+        Subscription memory sub
+    )
+        external
+    {
+        vm.assume(id != bytes32(ZERO_SENTINEL));
+        vm.assume(sub.subscriber != address(0));
+        vm.assume(caller != address(0));
+        vm.assume(caller != sub.subscriber);
+        module.exposed__subscribe(id, sub);
+
+        vm.expectRevert(Errors.OnlySubscriber.selector);
+        module.exposed__unsubscribe(caller, id);
     }
 
     function testFuzz_Unsubscribe_Internal(bytes32 id, Subscription memory sub) external givenIdentifierExists {
