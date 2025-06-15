@@ -5,8 +5,8 @@ import { SubscriptionModule } from "src/SubscriptionModule.sol";
 import { Subscription } from "src/libs/Types.sol";
 
 contract ModuleHarness is SubscriptionModule {
-    function exposed__subscribe(address subscriber, bytes32 id, Subscription memory subscription) external {
-        _subscribe(subscriber, id, subscription);
+    function exposed__subscribe(bytes32 id, Subscription memory subscription) external {
+        _subscribe(id, subscription);
     }
 
     function exposed__unsubscribe(address subscriber, bytes32 id) external {
@@ -17,15 +17,15 @@ contract ModuleHarness is SubscriptionModule {
         return _exists(id);
     }
 
-    function exposed__loadSubscription(bytes32 id) external view returns (address safe, Subscription memory sub) {
-        (safe, sub) = _loadSubscription(id);
+    function exposed__loadSubscription(bytes32 id) external view returns (Subscription memory) {
+        return _loadSubscription(id);
     }
 
     function exposed__requireRedeemablePeriods(Subscription memory sub) external view returns (uint256 periods) {
         periods = _requireRedeemablePeriods(sub);
     }
 
-    function exposed__applyRedemption(address safe, bytes32 id, Subscription memory sub, uint256 periods) external {
-        _applyRedemption(safe, id, sub, periods);
+    function exposed__applyRedemption(bytes32 id, Subscription memory sub, uint256 periods) external {
+        _applyRedemption(id, sub, periods);
     }
 }

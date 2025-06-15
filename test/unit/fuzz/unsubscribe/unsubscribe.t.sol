@@ -23,24 +23,23 @@ contract Subscribe_Unit_Fuzz_Test is Base_Test {
     function testFuzz_Unsubscribe_Internal(
         address subscriber,
         bytes32 id,
-        Subscription memory subscription
+        Subscription memory sub
     )
         external
         givenIdentifierExists
     {
         vm.assume(id != bytes32(ZERO_SENTINEL));
-        vm.assume(subscriber != address(0));
-        module.exposed__subscribe(subscriber, id, subscription);
+        vm.assume(sub.subscriber != address(0));
+        module.exposed__subscribe(id, sub);
 
         vm.expectEmit();
-        emit SubscriptionModule.Unsubscribed(id, subscriber);
+        emit SubscriptionModule.Unsubscribed(id, sub.subscriber);
 
-        module.exposed__unsubscribe(subscriber, id);
+        module.exposed__unsubscribe(sub.subscriber, id);
 
         assertEq(module.getSubscription(id), defaults.subscriptionEmpty());
-        assertEq(module.safeFromId(id), address(0));
         bytes32[] memory ids;
-        assertEq(module.getSubscriptionIds(subscriber), ids);
+        assertEq(module.getSubscriptionIds(sub.subscriber), ids);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -72,7 +71,6 @@ contract Subscribe_Unit_Fuzz_Test is Base_Test {
 
         for (uint256 i; i < 3; ++i) {
             assertEq(module.getSubscription(ids[i]), defaults.subscriptionEmpty());
-            assertEq(module.safeFromId(ids[i]), address(0));
         }
     }
 }

@@ -36,7 +36,8 @@ contract Module_Fork_Test is Fork_Test {
         bytes32 id = module.subscribe(info.to, info.value, 3600, true);
 
         resetPrank({ msgSender: info.to });
-        module.redeem(id, flowVertices, flowEdges, streams, packedCoordinates, sourceCoordinate);
+        bytes memory data = abi.encode(flowVertices, flowEdges, streams, packedCoordinates, sourceCoordinate);
+        module.redeem(id, data);
     }
 
     /// @dev Trusted path fails for this scenario, passes with untrusted flow
@@ -53,7 +54,7 @@ contract Module_Fork_Test is Fork_Test {
         uint256 cachedFromBal = hub.balanceOf(FROM, uint256(uint160(FROM)));
 
         resetPrank({ msgSender: info.to });
-        module.redeemUntrusted(id);
+        module.redeem(id, "");
 
         assertEq(hub.balanceOf(info.to, uint256(uint160(FROM))), cachedToBal + info.value);
         assertEq(hub.balanceOf(FROM, uint256(uint160(FROM))), cachedFromBal - info.value);
@@ -71,7 +72,7 @@ contract Module_Fork_Test is Fork_Test {
 
         resetPrank({ msgSender: info.to });
         vm.expectRevert(Errors.IdentifierNonexistent.selector);
-        module.redeemUntrusted(id);
+        module.redeem(id, "");
     }
 
     function test_ShouldRevert_CannotRedeemAgainImmediately() external {
@@ -84,9 +85,9 @@ contract Module_Fork_Test is Fork_Test {
         bytes32 id = module.subscribe(info.to, info.value, 3600, false);
 
         resetPrank({ msgSender: info.to });
-        module.redeemUntrusted(id);
+        module.redeem(id, "");
 
         vm.expectRevert(Errors.NotRedeemable.selector);
-        module.redeemUntrusted(id);
+        module.redeem(id, "");
     }
 }
