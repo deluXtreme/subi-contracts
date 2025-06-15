@@ -181,7 +181,6 @@ contract SubscriptionModule {
 
     function _unsubscribe(address caller, bytes32 id) internal {
         Subscription memory sub = _subscriptions[id];
-        require(sub.subscriber != address(0), Errors.IdentifierNonexistent());
         require(sub.subscriber == caller, Errors.OnlySubscriber());
         delete _subscriptions[id];
         ids[sub.subscriber].remove(id);
