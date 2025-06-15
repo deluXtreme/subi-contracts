@@ -15,32 +15,42 @@ contract Subscribe_Unit_Fuzz_Test is Base_Test {
                                 INTERNAL
     //////////////////////////////////////////////////////////////*/
 
-    function testFuzz_ShouldRevert_IdentifierNonexistent(address subscriber, bytes32 id) external {
-        vm.expectRevert(Errors.IdentifierNonexistent.selector);
+    function testFuzz_ShouldRevert_WhenSubscriptionMissing(address subscriber, bytes32 id) external {
+        vm.assume(subscriber != address(0));
+        vm.expectRevert(Errors.OnlySubscriber.selector);
         module.exposed__unsubscribe(subscriber, id);
     }
 
-    function testFuzz_Unsubscribe_Internal(
-        address subscriber,
+    function testFuzz_ShouldRevert_WhenCallerNotSubscriber(
+        address caller,
         bytes32 id,
-        Subscription memory subscription
+        Subscription memory sub
     )
         external
-        givenIdentifierExists
     {
         vm.assume(id != bytes32(ZERO_SENTINEL));
-        vm.assume(subscriber != address(0));
-        module.exposed__subscribe(subscriber, id, subscription);
+        vm.assume(sub.subscriber != address(0));
+        vm.assume(caller != address(0));
+        vm.assume(caller != sub.subscriber);
+        module.exposed__subscribe(id, sub);
+
+        vm.expectRevert(Errors.OnlySubscriber.selector);
+        module.exposed__unsubscribe(caller, id);
+    }
+
+    function testFuzz_Unsubscribe_Internal(bytes32 id, Subscription memory sub) external givenIdentifierExists {
+        vm.assume(id != bytes32(ZERO_SENTINEL));
+        vm.assume(sub.subscriber != address(0));
+        module.exposed__subscribe(id, sub);
 
         vm.expectEmit();
-        emit SubscriptionModule.Unsubscribed(id, subscriber);
+        emit SubscriptionModule.Unsubscribed(id, sub.subscriber);
 
-        module.exposed__unsubscribe(subscriber, id);
+        module.exposed__unsubscribe(sub.subscriber, id);
 
         assertEq(module.getSubscription(id), defaults.subscriptionEmpty());
-        assertEq(module.safeFromId(id), address(0));
         bytes32[] memory ids;
-        assertEq(module.getSubscriptionIds(subscriber), ids);
+        assertEq(module.getSubscriptionIds(sub.subscriber), ids);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -72,7 +82,6 @@ contract Subscribe_Unit_Fuzz_Test is Base_Test {
 
         for (uint256 i; i < 3; ++i) {
             assertEq(module.getSubscription(ids[i]), defaults.subscriptionEmpty());
-            assertEq(module.safeFromId(ids[i]), address(0));
         }
     }
 }
