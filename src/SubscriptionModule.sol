@@ -41,8 +41,6 @@ contract SubscriptionModule {
 
     address public constant MULTISEND = 0x38869bf66a61cF6bDB996A6aE40D5853Fd43B526;
 
-    bytes32 internal constant NULL_SUBSCRIPTION = 0x868e09d528a16744c1f38ea3c10cc2251e01a456434f91172247695087d129b7;
-
     bytes32 internal constant T_REDEEMABLE_AMOUNT = 0x70bfbb43a5ce660914e09d1b48fcc488982d5981137b973eac35b0592a414e90;
 
     mapping(bytes32 id => Subscription subscription) internal _subscriptions;
