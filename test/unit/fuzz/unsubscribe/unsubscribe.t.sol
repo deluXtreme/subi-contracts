@@ -28,8 +28,7 @@ contract Subscribe_Unit_Fuzz_Test is Base_Test {
         address r,
         uint256 a,
         uint256 lr,
-        uint256 f,
-        uint8 c
+        uint256 f
     )
         external
     {
@@ -41,7 +40,7 @@ contract Subscribe_Unit_Fuzz_Test is Base_Test {
         vm.assume(caller != address(0));
         vm.assume(caller != s);
 
-        Subscription memory sub = fuzzSubscription(s, r, a, lr, f, c);
+        Subscription memory sub = fuzzSubscription(s, r, a, lr, f, 0);
         module.exposed__subscribe(id, sub);
 
         vm.expectRevert(Errors.OnlySubscriber.selector);
@@ -54,8 +53,7 @@ contract Subscribe_Unit_Fuzz_Test is Base_Test {
         address r,
         uint256 a,
         uint256 lr,
-        uint256 f,
-        uint8 c
+        uint256 f
     )
         external
         givenIdentifierExists
@@ -66,8 +64,7 @@ contract Subscribe_Unit_Fuzz_Test is Base_Test {
         vm.assume(r != address(0));
         vm.assume(f > 0);
         vm.assume(lr <= block.timestamp);
-        vm.assume(c <= 2);
-        Subscription memory sub = fuzzSubscription(s, r, a, f, lr, c);
+        Subscription memory sub = fuzzSubscription(s, r, a, f, lr, 0);
         module.exposed__subscribe(id, sub);
 
         vm.expectEmit();
