@@ -5,6 +5,7 @@ import { Fork_Test } from "./Fork.t.sol";
 import { stdJson } from "forge-std/StdJson.sol";
 
 import { Errors } from "src/libs/Errors.sol";
+import { Category } from "src/libs/Types.sol";
 import { TypeDefinitions } from "@circles/src/hub/TypeDefinitions.sol";
 
 contract Module_Fork_Test is Fork_Test {
@@ -33,7 +34,7 @@ contract Module_Fork_Test is Fork_Test {
         ) = _toTypeFlowInfo(info);
 
         resetPrank({ msgSender: FROM });
-        bytes32 id = module.subscribe(info.to, info.value, 3600, true);
+        bytes32 id = module.subscribe(info.to, info.value, 3600, Category.trusted);
 
         resetPrank({ msgSender: info.to });
         bytes memory data = abi.encode(flowVertices, flowEdges, streams, packedCoordinates, sourceCoordinate);
@@ -48,7 +49,7 @@ contract Module_Fork_Test is Fork_Test {
         _enableModule();
 
         resetPrank({ msgSender: FROM });
-        bytes32 id = module.subscribe(info.to, info.value, 3600, false);
+        bytes32 id = module.subscribe(info.to, info.value, 3600, Category.untrusted);
 
         uint256 cachedToBal = hub.balanceOf(info.to, uint256(uint160(FROM)));
         uint256 cachedFromBal = hub.balanceOf(FROM, uint256(uint160(FROM)));
@@ -69,7 +70,7 @@ contract Module_Fork_Test is Fork_Test {
         _enableModule();
 
         resetPrank({ msgSender: FROM });
-        bytes32 id = module.subscribe(info.to, info.value, 3600, false);
+        bytes32 id = module.subscribe(info.to, info.value, 3600, Category.untrusted);
 
         uint256 cachedToBal = hub.balanceOf(info.to, uint256(uint160(FROM)));
         uint256 cachedFromBal = hub.balanceOf(FROM, uint256(uint160(FROM)));
@@ -90,7 +91,7 @@ contract Module_Fork_Test is Fork_Test {
         _enableModule();
 
         resetPrank({ msgSender: FROM });
-        bytes32 id = module.subscribe(info.to, info.value, 3600, false);
+        bytes32 id = module.subscribe(info.to, info.value, 3600, Category.untrusted);
         module.unsubscribe(id);
 
         resetPrank({ msgSender: info.to });
@@ -105,7 +106,7 @@ contract Module_Fork_Test is Fork_Test {
         _enableModule();
 
         resetPrank({ msgSender: FROM });
-        bytes32 id = module.subscribe(info.to, info.value, 3600, false);
+        bytes32 id = module.subscribe(info.to, info.value, 3600, Category.untrusted);
 
         resetPrank({ msgSender: info.to });
         module.redeem(id, "");

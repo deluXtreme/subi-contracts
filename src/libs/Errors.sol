@@ -10,6 +10,8 @@ library Errors {
 
     error IdentifierNonexistent();
 
+    error InvalidCategory();
+
     error InvalidFrequency();
 
     error InvalidRecipient();

@@ -5,11 +5,11 @@ import { ModuleHarness } from "./harness/ModuleHarness.sol";
 
 import { Assertions } from "./utils/Assertions.sol";
 import { Defaults } from "./utils/Defaults.sol";
+import { Fuzzers } from "./utils/Fuzzers.sol";
 import { Modifiers } from "./utils/Modifiers.sol";
 import { Users } from "./utils/Types.sol";
-import { Utils } from "./utils/Utils.sol";
 
-abstract contract Base_Test is Assertions, Utils, Modifiers {
+abstract contract Base_Test is Assertions, Fuzzers, Modifiers {
     /*//////////////////////////////////////////////////////////////
                                VARIABLES
     //////////////////////////////////////////////////////////////*/

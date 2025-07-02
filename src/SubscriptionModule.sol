@@ -6,7 +6,7 @@ import { IHubV2 } from "src/interfaces/IHub.sol";
 import { IMultiSend } from "src/interfaces/IMultiSend.sol";
 import { CirclesLib } from "src/libs/CirclesLib.sol";
 import { Errors } from "src/libs/Errors.sol";
-import { Subscription } from "src/libs/Types.sol";
+import { Subscription, Category } from "src/libs/Types.sol";
 import { SubscriptionLib } from "src/libs/SubscriptionLib.sol";
 
 import { ERC1155 } from "@circles/src/circles/ERC1155.sol";
@@ -56,18 +56,11 @@ contract SubscriptionModule {
         address indexed subscriber,
         address indexed recipient,
         uint256 amount,
-        uint256 lastRedeemed,
-        uint256 frequency,
-        bool requireTrusted
+        uint256 nextRedeemAt,
+        Category category
     );
 
-    event Redeemed(
-        bytes32 indexed id,
-        address indexed subscriber,
-        address indexed recipient,
-        uint256 lastRedeemed,
-        bool requireTrusted
-    );
+    event Redeemed(bytes32 indexed id, address indexed subscriber, address indexed recipient, uint256 nextRedeemAt);
 
     event RecipientUpdated(bytes32 indexed id, address indexed oldRecipient, address indexed newRecipient);
 
@@ -81,7 +74,7 @@ contract SubscriptionModule {
         address recipient,
         uint256 amount,
         uint256 frequency,
-        bool requireTrusted
+        Category category
     )
         external
         returns (bytes32 id)
@@ -93,13 +86,11 @@ contract SubscriptionModule {
             amount: amount,
             lastRedeemed: block.timestamp - frequency,
             frequency: frequency,
-            requireTrusted: requireTrusted
+            category: category
         });
         id = sub.compute();
         _subscribe(id, sub);
-        emit SubscriptionCreated(
-            id, msg.sender, recipient, amount, block.timestamp - frequency, frequency, requireTrusted
-        );
+        emit SubscriptionCreated(id, msg.sender, recipient, amount, block.timestamp, category);
     }
 
     function redeem(bytes32 id, bytes calldata data) external {
@@ -113,12 +104,9 @@ contract SubscriptionModule {
         sub.lastRedeemed += periods * sub.frequency;
         _subscriptions[id] = sub;
 
-        if (IHubV2(HUB).isGroup(sub.recipient)) {
+        if (sub.category == Category.group) {
             _redeemGroup(id, sub);
-            return;
-        }
-
-        if (sub.requireTrusted) {
+        } else if (sub.category == Category.trusted) {
             (
                 address[] memory flowVertices,
                 TypeDefinitions.FlowEdge[] memory flow,
@@ -127,8 +115,10 @@ contract SubscriptionModule {
                 uint256 sourceCoordinate
             ) = abi.decode(data, (address[], TypeDefinitions.FlowEdge[], TypeDefinitions.Stream[], bytes, uint256));
             _redeemTrusted(id, sub, flowVertices, flow, streams, packedCoordinates, sourceCoordinate);
-        } else {
+        } else if (sub.category == Category.untrusted) {
             _redeemUntrusted(id, sub);
+        } else {
+            revert Errors.InvalidCategory();
         }
     }
 
@@ -234,7 +224,7 @@ contract SubscriptionModule {
             Errors.ExecutionFailed()
         );
 
-        emit Redeemed(id, sub.subscriber, sub.recipient, sub.lastRedeemed, sub.requireTrusted);
+        emit Redeemed(id, sub.subscriber, sub.recipient, sub.lastRedeemed + sub.frequency);
         LibTransient.tUint256(T_REDEEMABLE_AMOUNT).clear();
     }
 
@@ -267,13 +257,11 @@ contract SubscriptionModule {
             Errors.ExecutionFailed()
         );
 
-        emit Redeemed(id, sub.subscriber, sub.recipient, sub.lastRedeemed, sub.requireTrusted);
+        emit Redeemed(id, sub.subscriber, sub.recipient, sub.lastRedeemed + sub.frequency);
         LibTransient.tUint256(T_REDEEMABLE_AMOUNT).clear();
     }
 
     function _redeemUntrusted(bytes32 id, Subscription memory sub) internal {
-        require(!sub.requireTrusted, Errors.TrustedPathOnly());
-
         require(
             ISafe(sub.subscriber).execTransactionFromModule(
                 HUB,
@@ -293,7 +281,7 @@ contract SubscriptionModule {
             Errors.ExecutionFailed()
         );
 
-        emit Redeemed(id, sub.subscriber, sub.recipient, sub.lastRedeemed, sub.requireTrusted);
+        emit Redeemed(id, sub.subscriber, sub.recipient, sub.lastRedeemed + sub.frequency);
         LibTransient.tUint256(T_REDEEMABLE_AMOUNT).clear();
     }
 

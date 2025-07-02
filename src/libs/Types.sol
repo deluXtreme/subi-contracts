@@ -7,5 +7,11 @@ struct Subscription {
     uint256 amount;
     uint256 lastRedeemed;
     uint256 frequency;
-    bool requireTrusted;
+    Category category;
+}
+
+enum Category {
+    trusted,
+    untrusted,
+    group
 }
