@@ -28,7 +28,7 @@ contract SubscriptionModule {
 
     using CirclesLib for TypeDefinitions.Stream[];
 
-    using LibTransient for *;
+    using LibTransient for LibTransient.TUint256;
 
     /*//////////////////////////////////////////////////////////////
                             STATE VARIABLES
