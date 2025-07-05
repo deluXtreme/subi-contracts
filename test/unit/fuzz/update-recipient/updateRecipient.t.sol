@@ -6,7 +6,7 @@ import { Base_Test } from "test/Base.t.sol";
 import { SubscriptionModule } from "src/SubscriptionModule.sol";
 import { SubscriptionLib } from "src/libs/SubscriptionLib.sol";
 import { Errors } from "src/libs/Errors.sol";
-import { Subscription } from "src/libs/Types.sol";
+import { Subscription, Category } from "src/libs/Types.sol";
 
 contract UpdateRecipient_Unit_Fuzz_Test is Base_Test {
     bytes32 internal id;
@@ -14,7 +14,9 @@ contract UpdateRecipient_Unit_Fuzz_Test is Base_Test {
     function setUp() public override {
         Base_Test.setUp();
 
-        id = module.subscribe(users.recipient, defaults.SUBSCRIPTION_AMOUNT(), defaults.SUBSCRIPTION_FREQUENCY(), true);
+        id = module.subscribe(
+            users.recipient, defaults.SUBSCRIPTION_AMOUNT(), defaults.SUBSCRIPTION_FREQUENCY(), Category.trusted
+        );
     }
 
     function testFuzz_ShouldRevert_SubscriptionDoesNotExist() external {

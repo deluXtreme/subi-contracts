@@ -10,6 +10,8 @@ library Errors {
 
     error IdentifierNonexistent();
 
+    error InvalidCategory();
+
     error InvalidFrequency();
 
     error InvalidRecipient();
@@ -25,4 +27,6 @@ library Errors {
     error TrustedPathOnly();
 
     error OnlyRecipient();
+
+    error OnlySubscriber();
 }

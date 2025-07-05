@@ -7,7 +7,7 @@ import { stdStorage, StdStorage } from "forge-std/Test.sol";
 import { SubscriptionModule } from "src/SubscriptionModule.sol";
 import { SubscriptionLib } from "src/libs/SubscriptionLib.sol";
 import { Errors } from "src/libs/Errors.sol";
-import { Subscription } from "src/libs/Types.sol";
+import { Subscription, Category } from "src/libs/Types.sol";
 
 contract Subscribe_Unit_Fuzz_Test is Base_Test {
     using stdStorage for StdStorage;
@@ -17,61 +17,68 @@ contract Subscribe_Unit_Fuzz_Test is Base_Test {
                                 INTERNAL
     //////////////////////////////////////////////////////////////*/
 
-    function testFuzz_ShouldRevert_IdentifierExists(
-        address subscriber,
-        bytes32 id,
-        Subscription memory subscription,
-        address almostAnything
-    )
-        external
-    {
-        vm.assume(id != bytes32(ZERO_SENTINEL));
-        vm.assume(almostAnything != address(0));
-        stdstore.target(address(module)).sig("safeFromId(bytes32)").with_key(id).checked_write(almostAnything);
+    function testFuzz_ShouldRevert_IdentifierExists(address s, address r, uint256 a, uint256 f, uint256 lr) external {
+        vm.assume(s != address(0));
+        vm.assume(r != address(0));
+        vm.assume(f > 0);
+        vm.assume(lr <= block.timestamp);
+
+        Subscription memory sub = Subscription({
+            subscriber: s,
+            recipient: r,
+            amount: a,
+            lastRedeemed: lr,
+            frequency: f,
+            category: Category.trusted
+        });
+
+        bytes32 id = sub.compute();
+        module.exposed__subscribe(id, sub);
 
         vm.expectRevert(Errors.IdentifierExists.selector);
-        module.exposed__subscribe(subscriber, id, subscription);
+        module.exposed__subscribe(id, sub);
     }
 
     function testFuzz_Subscribe_Internal(
-        address subscriber,
         bytes32 id,
-        Subscription memory subscription
+        address s,
+        address r,
+        uint256 a,
+        uint256 f,
+        uint256 lr,
+        uint8 c
     )
         external
         givenIdentifierNotExists
     {
         vm.assume(id != bytes32(ZERO_SENTINEL));
-        module.exposed__subscribe(subscriber, id, subscription);
+        vm.assume(s != address(0));
+        vm.assume(r != address(0));
+        vm.assume(f > 0);
+        vm.assume(lr <= block.timestamp);
 
-        assertEq(module.getSubscription(id), subscription);
-        assertEq(module.safeFromId(id), subscriber);
+        Subscription memory sub = fuzzSubscription(s, r, a, lr, f, c);
+        module.exposed__subscribe(id, sub);
+
+        assertEq(module.getSubscription(id), sub);
         bytes32[] memory ids = new bytes32[](1);
         ids[0] = id;
-        assertEq(module.getSubscriptionIds(subscriber), ids);
+        assertEq(module.getSubscriptionIds(sub.subscriber), ids);
     }
 
     /*//////////////////////////////////////////////////////////////
                               USER-FACING
     //////////////////////////////////////////////////////////////*/
 
-    function testFuzz_ShouldRevert_ZeroFrequency(
-        address recipient,
-        uint256 amount,
-        bool requireTrusted
-    )
-        external
-        givenIdentifierNotExists
-    {
+    function testFuzz_ShouldRevert_ZeroFrequency(address recipient, uint256 amount) external givenIdentifierNotExists {
         vm.expectRevert(Errors.InvalidFrequency.selector);
-        module.subscribe(recipient, amount, 0, requireTrusted);
+        module.subscribe(recipient, amount, 0, Category.trusted);
     }
 
     function testFuzz_Subscribe(
         address recipient,
         uint256 amount,
-        uint256 frequency,
-        bool requireTrusted
+        uint256 frequency
     )
         external
         whenCallerSubscriber
@@ -86,24 +93,17 @@ contract Subscribe_Unit_Fuzz_Test is Base_Test {
             amount: amount,
             lastRedeemed: vm.getBlockTimestamp() - frequency,
             frequency: frequency,
-            requireTrusted: requireTrusted
+            category: Category.trusted
         });
 
         vm.expectEmit();
         emit SubscriptionModule.SubscriptionCreated(
-            sub.compute(),
-            users.subscriber,
-            recipient,
-            amount,
-            vm.getBlockTimestamp() - frequency,
-            frequency,
-            requireTrusted
+            sub.compute(), users.subscriber, recipient, amount, vm.getBlockTimestamp(), Category.trusted
         );
 
-        bytes32 id = module.subscribe(recipient, amount, frequency, requireTrusted);
+        bytes32 id = module.subscribe(recipient, amount, frequency, Category.trusted);
 
         assertEq(module.getSubscription(id), sub);
-        assertEq(module.safeFromId(id), users.subscriber);
         bytes32[] memory ids = new bytes32[](1);
         ids[0] = id;
         assertEq(module.getSubscriptionIds(users.subscriber), ids);

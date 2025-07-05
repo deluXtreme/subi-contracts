@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity >=0.8.28;
 
-import { Subscription } from "src/libs/Types.sol";
+import { Subscription, Category } from "src/libs/Types.sol";
 
 import { Constants } from "./Constants.sol";
 import { Users } from "./Types.sol";
@@ -50,7 +50,7 @@ contract Defaults is Constants {
             amount: SUBSCRIPTION_AMOUNT,
             lastRedeemed: START_TIME - SUBSCRIPTION_FREQUENCY,
             frequency: SUBSCRIPTION_FREQUENCY,
-            requireTrusted: true
+            category: Category.trusted
         });
     }
 
@@ -61,7 +61,7 @@ contract Defaults is Constants {
             amount: SUBSCRIPTION_AMOUNT,
             lastRedeemed: START_TIME - SUBSCRIPTION_FREQUENCY,
             frequency: SUBSCRIPTION_FREQUENCY,
-            requireTrusted: false
+            category: Category.untrusted
         });
     }
 
@@ -72,7 +72,7 @@ contract Defaults is Constants {
             amount: 0,
             lastRedeemed: 0,
             frequency: 0,
-            requireTrusted: false
+            category: Category.trusted
         });
     }
 }

@@ -3,13 +3,14 @@ pragma solidity >=0.8.28 <0.9.0;
 
 import { ModuleHarness } from "./harness/ModuleHarness.sol";
 
+import { TransientPattern } from "./mocks/TransientPattern.sol";
 import { Assertions } from "./utils/Assertions.sol";
 import { Defaults } from "./utils/Defaults.sol";
+import { Fuzzers } from "./utils/Fuzzers.sol";
 import { Modifiers } from "./utils/Modifiers.sol";
 import { Users } from "./utils/Types.sol";
-import { Utils } from "./utils/Utils.sol";
 
-abstract contract Base_Test is Assertions, Utils, Modifiers {
+abstract contract Base_Test is Assertions, Fuzzers, Modifiers {
     /*//////////////////////////////////////////////////////////////
                                VARIABLES
     //////////////////////////////////////////////////////////////*/
@@ -23,6 +24,7 @@ abstract contract Base_Test is Assertions, Utils, Modifiers {
     Defaults internal defaults;
 
     ModuleHarness internal module;
+    TransientPattern internal transientPattern;
 
     /*//////////////////////////////////////////////////////////////
                             SET-UP FUNCTION
@@ -39,6 +41,9 @@ abstract contract Base_Test is Assertions, Utils, Modifiers {
 
         module = new ModuleHarness();
         vm.label(address(module), "ModuleHarness");
+
+        transientPattern = new TransientPattern();
+        vm.label(address(transientPattern), "TransientPattern");
 
         defaults.setUsers(users);
         setVariables(defaults, users);

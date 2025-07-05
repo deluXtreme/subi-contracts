@@ -5,6 +5,7 @@ import { Fork_Test } from "./Fork.t.sol";
 import { stdJson } from "forge-std/StdJson.sol";
 
 import { Errors } from "src/libs/Errors.sol";
+import { Category } from "src/libs/Types.sol";
 import { TypeDefinitions } from "@circles/src/hub/TypeDefinitions.sol";
 
 contract Module_Fork_Test is Fork_Test {
@@ -33,10 +34,11 @@ contract Module_Fork_Test is Fork_Test {
         ) = _toTypeFlowInfo(info);
 
         resetPrank({ msgSender: FROM });
-        bytes32 id = module.subscribe(info.to, info.value, 3600, true);
+        bytes32 id = module.subscribe(info.to, info.value, 3600, Category.trusted);
 
         resetPrank({ msgSender: info.to });
-        module.redeem(id, flowVertices, flowEdges, streams, packedCoordinates, sourceCoordinate);
+        bytes memory data = abi.encode(flowVertices, flowEdges, streams, packedCoordinates, sourceCoordinate);
+        module.redeem(id, data);
     }
 
     /// @dev Trusted path fails for this scenario, passes with untrusted flow
@@ -47,16 +49,39 @@ contract Module_Fork_Test is Fork_Test {
         _enableModule();
 
         resetPrank({ msgSender: FROM });
-        bytes32 id = module.subscribe(info.to, info.value, 3600, false);
+        bytes32 id = module.subscribe(info.to, info.value, 3600, Category.untrusted);
 
         uint256 cachedToBal = hub.balanceOf(info.to, uint256(uint160(FROM)));
         uint256 cachedFromBal = hub.balanceOf(FROM, uint256(uint160(FROM)));
 
         resetPrank({ msgSender: info.to });
-        module.redeemUntrusted(id);
+        module.redeem(id, "");
 
         assertEq(hub.balanceOf(info.to, uint256(uint160(FROM))), cachedToBal + info.value);
         assertEq(hub.balanceOf(FROM, uint256(uint160(FROM))), cachedFromBal - info.value);
+    }
+
+    function test_Scenario_1_MultiplePeriods() external {
+        uint256 numPeriods = 3;
+
+        bytes memory rawBlob = json.parseRaw(".1");
+        FlowInfo memory info = abi.decode(rawBlob, (FlowInfo));
+
+        _enableModule();
+
+        resetPrank({ msgSender: FROM });
+        bytes32 id = module.subscribe(info.to, info.value, 3600, Category.untrusted);
+
+        uint256 cachedToBal = hub.balanceOf(info.to, uint256(uint160(FROM)));
+        uint256 cachedFromBal = hub.balanceOf(FROM, uint256(uint160(FROM)));
+
+        vm.warp(vm.getBlockTimestamp() + 3600 * (numPeriods - 1));
+
+        resetPrank({ msgSender: info.to });
+        module.redeem(id, "");
+
+        assertEq(hub.balanceOf(info.to, uint256(uint160(FROM))), cachedToBal + numPeriods * info.value);
+        assertEq(hub.balanceOf(FROM, uint256(uint160(FROM))), cachedFromBal - numPeriods * info.value);
     }
 
     function test_ShouldRevert_CannotRedeemAfterUnsubscribed() external {
@@ -66,12 +91,12 @@ contract Module_Fork_Test is Fork_Test {
         _enableModule();
 
         resetPrank({ msgSender: FROM });
-        bytes32 id = module.subscribe(info.to, info.value, 3600, false);
+        bytes32 id = module.subscribe(info.to, info.value, 3600, Category.untrusted);
         module.unsubscribe(id);
 
         resetPrank({ msgSender: info.to });
         vm.expectRevert(Errors.IdentifierNonexistent.selector);
-        module.redeemUntrusted(id);
+        module.redeem(id, "");
     }
 
     function test_ShouldRevert_CannotRedeemAgainImmediately() external {
@@ -81,12 +106,12 @@ contract Module_Fork_Test is Fork_Test {
         _enableModule();
 
         resetPrank({ msgSender: FROM });
-        bytes32 id = module.subscribe(info.to, info.value, 3600, false);
+        bytes32 id = module.subscribe(info.to, info.value, 3600, Category.untrusted);
 
         resetPrank({ msgSender: info.to });
-        module.redeemUntrusted(id);
+        module.redeem(id, "");
 
         vm.expectRevert(Errors.NotRedeemable.selector);
-        module.redeemUntrusted(id);
+        module.redeem(id, "");
     }
 }
