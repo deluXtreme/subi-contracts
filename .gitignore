@@ -4,8 +4,6 @@ out/
 coverage/
 
 # Ignores development broadcast logs
-!broadcast
-broadcast/*
 broadcast/*/31337/
 
 # Dotenv file

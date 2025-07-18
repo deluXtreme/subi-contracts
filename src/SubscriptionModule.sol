@@ -56,7 +56,7 @@ contract SubscriptionModule {
         address indexed subscriber,
         address indexed recipient,
         uint256 amount,
-        uint256 nextRedeemAt,
+        uint256 frequency,
         Category category
     );
 
@@ -90,7 +90,7 @@ contract SubscriptionModule {
         });
         id = sub.compute();
         _subscribe(id, sub);
-        emit SubscriptionCreated(id, msg.sender, recipient, amount, block.timestamp, category);
+        emit SubscriptionCreated(id, msg.sender, recipient, amount, frequency, category);
     }
 
     function redeem(bytes32 id, bytes calldata data) external {
