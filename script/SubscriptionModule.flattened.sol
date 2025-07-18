@@ -8057,7 +8057,8 @@ contract SubscriptionModule {
         address indexed recipient,
         uint256 amount,
         uint256 frequency,
-        Category category
+        Category category,
+        uint256 creationTimestamp
     );
 
     event Redeemed(bytes32 indexed id, address indexed subscriber, address indexed recipient, uint256 nextRedeemAt);
@@ -8090,7 +8091,7 @@ contract SubscriptionModule {
         });
         id = sub.compute();
         _subscribe(id, sub);
-        emit SubscriptionCreated(id, msg.sender, recipient, amount, frequency, category);
+        emit SubscriptionCreated(id, msg.sender, recipient, amount, frequency, category, block.timestamp);
     }
 
     function redeem(bytes32 id, bytes calldata data) external {

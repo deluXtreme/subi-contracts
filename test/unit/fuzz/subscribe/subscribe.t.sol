@@ -98,7 +98,7 @@ contract Subscribe_Unit_Fuzz_Test is Base_Test {
 
         vm.expectEmit();
         emit SubscriptionModule.SubscriptionCreated(
-            sub.compute(), users.subscriber, recipient, amount, frequency, Category.trusted
+            sub.compute(), users.subscriber, recipient, amount, frequency, Category.trusted, vm.getBlockTimestamp()
         );
 
         bytes32 id = module.subscribe(recipient, amount, frequency, Category.trusted);
