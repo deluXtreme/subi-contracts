@@ -42,11 +42,11 @@ contract TransientPattern_Unit_Fuzz_Test is Base_Test {
         assertEq(shouldBeZero, 0);
     }
 
-    function _expectedValue(bool isDoSomething, uint256 ta) internal returns (bytes32) {
+    function _expectedValue(bool isDoSomething, uint256 ta) internal pure returns (bytes32) {
         return (isDoSomething) ? _getHash("SOMETHING", ta) : _getHash("SOMETHING_ELSE", ta);
     }
 
-    function _getHash(string memory s, uint256 ta) internal returns (bytes32) {
+    function _getHash(string memory s, uint256 ta) internal pure returns (bytes32) {
         return keccak256(abi.encode(s, ta));
     }
 }

@@ -9,7 +9,7 @@ import { Vm } from "forge-std/Vm.sol";
 import { Assertions } from "../utils/Assertions.sol";
 import { Utils } from "../utils/Utils.sol";
 
-import { IHubV2 } from "@circles/src/hub/IHub.sol";
+import { IHubV2 } from "src/interfaces/IHub.sol";
 import { TypeDefinitions } from "@circles/src/hub/TypeDefinitions.sol";
 import { Enum } from "@safe-smart-account/contracts/common/Enum.sol";
 import { ModuleManager } from "@safe-smart-account/contracts/base/ModuleManager.sol";

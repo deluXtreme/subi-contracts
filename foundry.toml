@@ -17,7 +17,7 @@ fuzz = { runs = 10_000 }
 verbosity = 4
 
 [etherscan]
-mainnet = { key = "${API_KEY_ETHERSCAN}" }
+gnosis = { key = "${API_KEY_ETHERSCAN}" }
 
 [fmt]
 bracket_spacing = true
@@ -30,4 +30,4 @@ tab_width = 4
 wrap_comments = true
 
 [rpc_endpoints]
-gnosis = "https://rpc.gnosis.gateway.fm"
+gnosis = "${RPC_URL}"

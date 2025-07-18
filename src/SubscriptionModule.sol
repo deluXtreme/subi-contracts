@@ -182,44 +182,12 @@ contract SubscriptionModule {
         uint256[] memory amounts = new uint256[](1);
         amounts[0] = sub.amount;
 
-        /**
-         * Steps required to handle group minting for the subscriber
-         *   - pull subscriber CRC tokens
-         *   - mint group (= recipient) tokens to this module using subscriber CRC collateral
-         *     - empty data for now, @todo check group mint policies for requirements
-         *   - transfer minted group tokens to the subscriber
-         */
-        bytes memory call0 = abi.encodeCall(
-            ERC1155.safeTransferFrom,
-            (
-                sub.subscriber,
-                address(this),
-                _toTokenId(sub.subscriber),
-                LibTransient.tUint256(T_REDEEMABLE_AMOUNT).get(),
-                ""
-            )
-        );
-        /// @todo empty data for now -- checkout mint policies of existing groups for data requirements
-        bytes memory call1 = abi.encodeCall(IHubV2.groupMint, (sub.recipient, collateralAvatars, amounts, ""));
-        bytes memory call2 = abi.encodeCall(
-            ERC1155.safeTransferFrom,
-            (
-                address(this),
-                sub.subscriber,
-                _toTokenId(sub.recipient),
-                ERC1155(HUB).balanceOf(address(this), _toTokenId(sub.recipient)),
-                ""
-            )
-        );
-        bytes memory transactions = bytes.concat(
-            abi.encodePacked(uint8(0), HUB, uint256(0), call0.length, call0),
-            abi.encodePacked(uint8(0), HUB, uint256(0), call1.length, call1),
-            abi.encodePacked(uint8(0), HUB, uint256(0), call2.length, call2)
-        );
-
         require(
             ISafe(sub.subscriber).execTransactionFromModule(
-                MULTISEND, 0, abi.encodeCall(IMultiSend.multiSend, (transactions)), Enum.Operation.DelegateCall
+                HUB,
+                0,
+                abi.encodeCall(IHubV2.groupMint, (sub.recipient, collateralAvatars, amounts, "")),
+                Enum.Operation.Call
             ),
             Errors.ExecutionFailed()
         );
